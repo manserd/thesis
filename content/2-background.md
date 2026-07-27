@@ -2,9 +2,9 @@
 
 ## State Spaces
 
-We define a *state space* as a tuple $$\mathcal{S}=\langle S,A,\operatorname{cost},T,s_{I},S_G\rangle,$$ with $S$ the set of states, $A$ the set of actions, $\operatorname{cost}:A\rightarrow\mathbb{R}_0^+$ the cost function, $T\subseteq S\times A\times S$ the transition relation, $s_I\in S$ the initial state, and $S_G\subseteq S$ the set of goal states.
+We define a *state space* as a tuple $$\mathcal{S}=\langle S,A,\mathrm{cost},T,s_{I},S_G\rangle,$$ with $S$ the set of states, $A$ the set of actions, $\mathrm{cost}:A\rightarrow\mathbb{R}_0^+$ the cost function, $T\subseteq S\times A\times S$ the transition relation, $s_I\in S$ the initial state, and $S_G\subseteq S$ the set of goal states.
 
-- successor generator function $\operatorname{succ}$
+- successor generator function $\mathrm{succ}$
 - set of all $s$-plans (path to goal from $s$) $P(s)$
 - paths between $s$ and $s'$ $P(s,s')$
 - TV ignore transition costs
@@ -28,15 +28,15 @@ If the *maximum heuristic value* refers to the highest encountered heuristic val
 - $\mathit{hw}_h(s)\geq h(s)$ (when is this used?)
 - $\mathit{hw}_h(S):=\min_{s\in S}\mathit{hw}_h(s)$
 
-We say GBFS *makes progress* when it encounters a state with a lower high-water mark among its successors: $\operatorname{hw}_h(\operatorname{succ}(s))<\operatorname{hw}_h(s)$.
+We say GBFS *makes progress* when it encounters a state with a lower high-water mark among its successors: $\mathrm{hw}_h(\mathrm{succ}(s))<\mathrm{hw}_h(s)$.
 
-- $\operatorname{succ}$ undefined
+- $\mathrm{succ}$ undefined
 
 Such a state $s$ is called a *progress state*.
 
 ## Benches
 
-Let $s$ be some state, and consider the lowest high-water mark among its successors, $\mathit{hw}_h(\operatorname{succ}(s))$.
+Let $s$ be some state, and consider the lowest high-water mark among its successors, $\mathit{hw}_h(\mathrm{succ}(s))$.
 
 Any state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level, but which is **not** a progress state, can be considered part of a "bench" induced by $s$. We call these states the *inner states*.
 
