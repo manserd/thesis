@@ -1,0 +1,66 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{util}
+
+% Potentially useful macros from my https://gist.github.com/thechnet/43bceb10d416b2e633db92c98d69ca65, adapted.
+
+\usepackage{xspace}
+
+\ExplSyntaxOn
+
+\newcommand{\bb}[1]{\ensuremath{\mathbb{#1}}}
+\clist_map_inline:nn { A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z }
+{
+    \exp_args:Nc \NewDocumentCommand { bb #1 } { s } { \ensuremath{\mathbb{#1}}\IfBooleanF{##1}{\xspace} }
+    \exp_args:Nc \NewDocumentCommand { rm #1 } { s } { \ensuremath{\mathrm{#1}}\IfBooleanF{##1}{\xspace} }
+    \exp_args:Nc \NewDocumentCommand { cal #1 } { s } { \ensuremath{\mathcal{#1}}\IfBooleanF{##1}{\xspace} }
+}
+\clist_map_inline:nn { a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z }
+{
+    \exp_args:Nc \NewDocumentCommand { bb #1 } { s } { \ensuremath{\mathbb{#1}}\IfBooleanF{##1}{\xspace} }
+    \exp_args:Nc \NewDocumentCommand { rm #1 } { s } { \ensuremath{\mathrm{#1}}\IfBooleanF{##1}{\xspace} }
+}
+
+\cs_new_protected:Npn \flatarrow:nnnn #1 #2 #3 #4
+{
+    \ensuremath {
+        \IfValueTF {#2}
+            { #4{\text{#2}} }
+            { #3 }
+    }
+    \xspace
+}
+\NewDocumentCommand{\ar}{s o} { \flatarrow:nnnn {#1} {#2} { \rightarrow } { \xrightarrow } }
+\NewDocumentCommand{\al}{s o} { \flatarrow:nnnn {#1} {#2} { \leftarrow } { \xleftarrow } }
+\NewDocumentCommand{\alr}{s o} { \flatarrow:nnnn {#1} {#2} { \leftrightarrow } { \xleftrightarrow } }
+\NewDocumentCommand{\Al}{s o} { \flatarrow:nnnn {#1} {#2} { \Leftarrow } { \xLeftarrow } }
+\NewDocumentCommand{\Ar}{s o} { \flatarrow:nnnn {#1} {#2} { \Rightarrow } { \xRightarrow } }
+\NewDocumentCommand{\Alr}{s o} { \flatarrow:nnnn {#1} {#2} { \Leftrightarrow } { \xLeftrightarrow } }
+\prop_new:N \l_arrows_prop
+\prop_set_from_keyval:Nn \l_arrows_prop
+{
+    au  = \uparrow, ad  = \downarrow, aud = \updownarrow,
+    atl = \nwarrow, atr = \nearrow, abl = \swarrow, abr = \searrow,
+    Au  = \Uparrow, Ad  = \Downarrow, Aud = \Updownarrow,
+    acl = \circlearrowleft, acr = \circlearrowright,
+    aal = \curvearrowleft,  aar = \curvearrowright
+}
+\prop_map_inline:Nn \l_arrows_prop
+{
+    \exp_args:Nc \NewDocumentCommand {#1} { o }
+        { \ensuremath { \IfValueT {##1} { \stackrel{\text{##1}} } #2 } \xspace }
+}
+
+\renewcommand{\ast}{\mathbin{\text{\textasteriskcentered}}}
+
+% https://tex.stackexchange.com/questions/103408/symbol-for-corresponds-to-equals-sign-with-hat
+\usepackage{scalerel,stackengine}
+\newcommand\equalhat{\mathrel{\stackon[1.5pt]{=}{\stretchto{%
+    \scalerel*[\widthof{=}]{\wedge}{\rule{1ex}{3ex}}}{0.5ex}}}}
+
+\newcommand{\circled}[1]{\tikz[baseline=(char.base)]{
+    \node[shape=circle,draw,inner sep=0.5pt] (char) {#1};}}
+
+\NewDocumentCommand{\op}{s m}{\IfBooleanTF{#1}{\operatorname*{#2}}{\operatorname{#2}}}
+\NewDocumentCommand{\var}{m}{\mathit{#1}}
+
+\ExplSyntaxOff

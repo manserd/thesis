@@ -1,0 +1,28 @@
+\documentclass[a4paper,10pt]{scrreprt}
+
+\usepackage[hybrid,texMathDollars]{markdown} % \markdownInput.
+\usepackage{todonotes} % \todo.
+\usepackage{setspace} % \onehalfspacing.
+\usepackage{amsmath}
+% \usepackage{util} % Not ideal because it breaks Markdown previews.
+
+\onehalfspacing
+
+% \show\neq
+
+\begin{document}
+
+\markdownInput{content/0-front.tex}
+
+\tableofcontents
+
+\markdownInput{content/1-intro.md}
+\markdownInput{content/2-background.md}
+\markdownInput{content/3-algos.md}
+\markdownInput{content/4-impl.md}
+\markdownInput{content/5-res.md}
+
+\bibliographystyle{plain}
+\bibliography{main}
+
+\end{document}
