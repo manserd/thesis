@@ -1,0 +1,158 @@
+\chapter{Background}
+
+This chapter introduces relevant concepts and notation.
+
+% for now, definitions mostly match \citet{tomasz2024}.
+
+\section{State Spaces}
+
+We define a \kw{state space} as a tuple $$\calS=\langle S,s_I,S_G,\op{succ}\rangle,$$ with $S$ the set of \kw{states}, $s_I\in S$ the \kw{initial state}, $S_G\subseteq S$ the set of \kw{goal states}, and $\op{succ}:S\ar\calP(S)$ the \kw{successor generator function}.
+
+% is $\calP$ for the power set sufficiently \quoted{standard} to be used without comment?
+
+\section{Heuristics}
+
+A \kw{heuristic} $h:S\ar\bbR_0^+\cup\{\infty\}$ maps a state $s$ to the approximate distance (following transitions in the state space graph) from $s$ to the nearest goal state.
+
+% $\infty$ might not be necessary for our purposes
+
+% also, this should be rewritten so it does not rely on the later definition of \kw{transitions}
+
+% $h(S)=\min_{s\in S}h(s)$
+% state space topology $\calT=\langle\calS,h\rangle$
+
+\section{State Space Search}
+
+A state space induces a \kw{state space graph} with nodes $S$ and \kw{transitions} (arcs) $s\ar s'$ for all $s\in S$ and corresponding $s'\in\op{succ}(s)$. To model algorithms that interact with this graph, we introduce a generic interface:
+
+\begin{quote}
+    \texttt{init()} generates the initial state
+    \\\texttt{is\_goal(s)} returns \texttt{true} if $s$ is a goal state, else \texttt{false}
+    \\\texttt{succ(s)} returns the set of successor states for $s$
+    \\\texttt{h(s)} returns the heuristic value for $s$
+\end{quote}
+
+Starting at the initial state, a state space is searched (\kw{explored}) as follows: if the current state is in the goal states, stop; otherwise, select (using some algorithm) a successor state from the successor generator function and repeat.
+
+\begin{algorithm}
+\caption{State Space Search}
+\begin{algorithmic}[1]
+    \State open := \New MinMap ordered by $\langle f,h\rangle$
+    \If{$\texttt{h}(\texttt{init}())<\infty$}
+        \State open.insert(make\_root\_node())
+    \EndIf
+\end{algorithmic}
+\end{algorithm}
+
+% explain open list?
+% this definition models $\op{succ}$ as a pure (as in stateless) function, requiring us to introduce an additional construct (\quoted{some algorithm}) that handles the closed list/decides which successors are preferred/breaks ties, etc
+% set of all $s$-plans (path to goal from $s$) $P(s)$
+% paths between $s$ and $s'$ $P(s,s')$
+% \quoted{$s\in\calS$} means $s\in S$
+
+\section{Greedy Best-First Search}
+
+\kw{Greedy best-first search}[GBFS] is a search algorithm that always selects the successor state with the smallest heuristic value.
+
+\begin{algorithm}
+\caption{GBFS without reopening}
+\begin{algorithmic}[1]
+    \State \var{open} \ceq \New List ordered by h
+    \If{$\text{h(init())}<\infty$}
+        \State \var{open}.insert(\New Node(\textbf{null}, init()))
+    \EndIf
+    \State \var{closed} \ceq \New Set
+    \While{\Not \var{open}.is\_empty()}
+        \State \var{n} \ceq \var{open}.pop\_min()
+        \If{\var{n}.state $\notin$ \var{closed}}
+            \State \var{closed}.insert(\var{n}.state)
+            \If{is\_goal(\var{n}.state)}
+                \State \Return extract\_path(\var{n})
+            \EndIf
+            \ForAll{$s'\in$ succ(\var{n}.state)}
+                \If{h($s'$) $<\infty$}
+                    \State $n'$ \ceq \New Node($n$, $s'$)
+                    \State \var{open}.insert($n'$)
+                \EndIf
+            \EndFor
+        \EndIf
+    \EndWhile
+    \State \Return \textbf{unsolvable}
+\end{algorithmic}
+\end{algorithm}
+
+% extract\_path is currently undefined, will revisit later
+% open/closed lists, explain (no) reopening (satisficing)
+
+\section{High-Water Mark}
+
+$$\var{hw}_h(s):=\begin{cases}\min_{p\in P(s)}(\max_{s'\in p}h(s')), & \text{if } P(s)\neq\emptyset; \\ \infty, & \text{otherwise}.\end{cases}$$
+
+If the \kw{maximum heuristic value} refers to the highest encountered heuristic value along some path, then $\var{hw}_h(s)$ selects the lowest such maximum heuristic value (of the heuristic $h$) among all paths from $s$ to a goal. Or intuitively, following the definition by \citet{heusner2017}: the high-water mark shows how high $h$ must climb before a solution is found.
+
+% check reference definition
+% $\var{hw}_h(s)\geq h(s)$ (when is this used?)
+% $\var{hw}_h(S):=\min_{s\in S}\var{hw}_h(s)$
+
+We say GBFS \kw{makes progress} when it encounters a state with a lower high-water mark among its successors: $\op{hw}_h(\op{succ}(s))<\op{hw}_h(s)$. Such a state $s$ is called a \kw{progress state}.
+
+\section{Benches}
+
+Let $s$ be some state, and consider the lowest high-water mark among its successors, $\var{hw}_h(\op{succ}(s))$.
+
+Any state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level, but which is \emph{not} a progress state, can be considered part of a \quoted{bench} induced by $s$. We call these states the \kw{inner states}.
+
+Naturally, a state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level but which \emph{is} a progress state can thus be considered at the \quoted{edge} of the aforementioned \quoted{bench}. These states are called the \kw{exit states}.
+
+Combining the two: for any state $s$, its \kw{bench} is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ being the inner states and $E$ the exit states.
+
+Note that we may use $I(\calB(s))$ and $E(\calB(s))$ to refer to the inner and exit states of $\calB(s)$.
+
+% check reference definition
+
+\section{Bench Transition System}
+
+A \kw{bench transition system} $\var{BTS}(\calT)$ captures the benches for a given state space topology \calT. $\var{BTS}(\calT)$ is a directed graph $\langle V,E\rangle$ that is constructed as follows:
+
+\begin{enumerate}
+    \item $\calB(s_I)\in V$.
+    \item If $\calB(s)\in V$ and $s'\in E(\calB(s))$ and $s'\notin S_G$, then $\calB(s')\in V$ and $\langle\calB(s),\calB(s')\rangle\in E$.
+\end{enumerate}
+
+% "set of episodes"
+
+\section{Uninformed Heuristic Regions}
+
+An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. We name two kinds of UHRs.
+
+\subsection{Craters}
+
+% "A crater is defined as the set of all states s' reachable from a crater entry s along a path on which for any s'', h(s'') lss level(s)."
+
+\subsection{Plateaus}
+
+% "a plateau is a subset of states on the same bench that all have the same heuristic value"
+
+\section{Stochastic Exploration}
+
+Once GBFS enters a UHR, its greedyness will trap it in the region until it has either searched all of it or manages to find a way out. In this case, it can be beneficial to occasionally ignore the advice of the heuristic and instead take a random transition. This is called \kw{stochastic exploration}.
+
+\subsection{$\epsilon$-GBFS}
+
+\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but becomes less effective as GBFS becomes more and more trapped in a UHR, because the open list will be dominated by states within that region.
+
+\subsection{Type-GBFS}
+
+\kw{Type-GBFS} attempts to eliminate this bias: it uses a \kw{type system} to bucket states by shared characteristics. Random successors are then selected by first selecting such a bucket, called \kw{type}, followed by selecting the actual successor from within the chosen type.
+
+The performance of Type-GBFS depends on which type system is used, or in other words, which characteristics are used to bucket states.
+
+\subsubsection{$\langle h,g\rangle$ Type System}
+
+The \kw{$\langle h,g\rangle$ type system} buckets those states together that have the same heuristic value $h$ and \kw{path cost} $g$. The \kw{path cost} is the sum of the costs of all the transitions taken by GBFS to arrive at the current state.
+
+% we otherwise ignore transition costs, so maybe we will be able to omit this. will see later. also, this definition of path cost is a bit awkward, because g is not given for a state but rather for a node in the search tree
+
+\subsubsection{Biased Type Selection}
+
+

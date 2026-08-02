@@ -1,0 +1,14 @@
+\chapter{Introduction}
+
+Classical (automated) planning is an area in artifical intelligence research concerned with the automated solving of (static, deterministic, fully observable) problems: these problems are modeled as \textit{state spaces} comprised of \textit{states} and \textit{transitions} between states, where the objective is finding a sequence of transitions starting at an \textit{initial state} that results in a desired \textit{goal state}.
+
+A subset of the search algorithms used to explore such state spaces are the \textit{heuristic algorithms}, which are defined by their ability to use a \textit{heuristic function} to make \textit{informed} decisions during exploration of a space. One such algorithm is \kw{greedy best-first search}[GBFS].
+
+GBFS is considered \quoted{greedy} because it always makes \textit{locally} optimal decisions, without the privilege of a more holistic view of its progress. This results in \sout{a comparatively small memory footprint and} great performance, which allows us to explore larger state spaces, but also makes GBFS vulnerable: if a heuristic advertises inaccurate goal distances for a given region in the state space, GBFS is forced to search these so-called \kw{uninformed heuristic regions}[UHRs] exhaustively or until it manages to return to an informed region.
+
+One method to mitigate this issue is \textit{stochastic exploration}, where we allow GBFS to occasionally ignore the advice of the heuristic and instead select a successor stochastically. The effectiveness of this approach can be helped by tuning the probability distribution during these \textit{exploratory expansions} such that it promotes higher diversity upon a stochastic selection; this is the idea of \textit{type-based stochastic exploration}: instead of simply selecting a successor directly, states are first \textit{bucketed} by shared qualities. We then start by stochastically selecting such a \textit{bucket}, from which we then stochastically select an actual successor state.
+
+One difficulty with type-based expansion is finding a suitable strategy by which to bucket states, called a \textit{type system}. Traditionally, states are bucketed using features such as heuristic value or path length \cite{}. Tomasz and Valenzano \cite{} propose a new approach based on the concept of \textit{benches}.
+
+% advantages of the new type systems
+% announce what this work aims to do

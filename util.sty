@@ -61,6 +61,15 @@
     \node[shape=circle,draw,inner sep=0.5pt] (char) {#1};}}
 
 \NewDocumentCommand{\op}{s m}{\IfBooleanTF{#1}{\operatorname*{#2}}{\operatorname{#2}}}
-\NewDocumentCommand{\var}{m}{\mathit{#1}}
+\NewDocumentCommand{\var}{m}{\ensuremath{\mathit{#1}}}
 
 \ExplSyntaxOff
+
+%
+
+\NewDocumentCommand{\kw}{m o}{\textit{#1}\IfValueT{#2}{ (\textit{#2})}}
+\NewDocumentCommand{\quoted}{m}{``#1''}
+
+\usepackage{mathtools} % \coloneq.
+
+\NewDocumentCommand{\ceq}{}{\ensuremath{\coloneq}\xspace}

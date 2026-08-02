@@ -1,15 +1,2 @@
-/*.aux
-/*.bbl
-/*.bcf
-/*.blg
-/*.err
-/*.fdb_latexmk
-/*.fls
-/*.in
-/*.log
-/*.lua
-/*.pdf
-/*.synctex.gz
-/*.toc
-/*.xml
-/_markdown_main/
+/*/
+!/content/

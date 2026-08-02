@@ -1,5 +1,11 @@
 all: main.tex
-	latexmk -pdf -interaction=nonstopmode -halt-on-error -pdflatex="pdflatex -shell-escape %O %S" main.tex
+	python3 preprocess.py
+	latexmk -outdir=build -pdf -interaction=nonstopmode -halt-on-error main.tex
+	cp build/main.pdf .
 
 clean:
 	git clean -fdX
+
+fresh:
+	make clean
+	make
