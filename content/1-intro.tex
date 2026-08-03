@@ -8,7 +8,7 @@ GBFS is considered \quoted{greedy} because it always makes \textit{locally} opti
 
 One method to mitigate this issue is \textit{stochastic exploration}, where we allow GBFS to occasionally ignore the advice of the heuristic and instead select a successor stochastically. The effectiveness of this approach can be helped by tuning the probability distribution during these \textit{exploratory expansions} such that it promotes higher diversity upon a stochastic selection; this is the idea of \textit{type-based stochastic exploration}: instead of simply selecting a successor directly, states are first \textit{bucketed} by shared qualities. We then start by stochastically selecting such a \textit{bucket}, from which we then stochastically select an actual successor state.
 
-One difficulty with type-based expansion is finding a suitable strategy by which to bucket states, called a \textit{type system}. Traditionally, states are bucketed using features such as heuristic value or path length \cite{}. Tomasz and Valenzano \cite{} propose a new approach based on the concept of \textit{benches}.
+One difficulty with type-based expansion is finding a suitable strategy by which to bucket states, called a \textit{type system}. Traditionally, states are bucketed using features such as heuristic value or path length \cite{}. \citet{tomasz2024} propose a new approach based on the concept of \textit{benches}.
 
 % advantages of the new type systems
 % announce what this work aims to do

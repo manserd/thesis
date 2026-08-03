@@ -1,1 +1,77 @@
 \chapter{Algorithms}
+
+\begin{algorithm}
+    \caption{GBFS without reopening}
+    \begin{algorithmic}[1]
+        \State \var{open} \ceq \New List ordered by h
+        \If{$\text{h(init())}<\infty$}
+        \State \var{open}.insert(\New Node(\textbf{null}, init()))
+        \EndIf
+        \State \var{closed} \ceq \New Set
+        \While{\Not \var{open}.is\_empty()}
+        \State $n$ \ceq \var{open}.pop\_min()
+        \If{$n$.state $\notin$ \var{closed}}
+        \State \var{closed}.insert($n$.state)
+        \If{is\_goal($n$.state)}
+        \State \Return extract\_path($n$)
+        \EndIf
+        \ForAll{$s'\in$ succ($n$.state)}
+        \If{h($s'$) $<\infty$}
+        \State $n'$ \ceq \New Node($n$, $s'$)
+        \State \var{open}.insert($n'$)
+        \EndIf
+        \EndFor
+        \EndIf
+        \EndWhile
+        \State \Return \textbf{unsolvable}
+    \end{algorithmic}
+\end{algorithm}
+
+% extract\_path is currently undefined, will revisit later
+
+% open/closed lists, explain (no) reopening (satisficing)
+
+\begin{algorithm}[H]
+    \caption{Queue-alternating GBFS (without reopening, assuming $h(s)<\infty\forall s$)}
+    \begin{algorithmic}[1]
+        \State \var{queues} \ceq List(StandardQueue(), ExplorationQueue())
+        \State $n_0$ \ceq Node(\textbf{null}, init())
+        \ForAll{\var{queue} $\in$ \var{queues}}
+            \State \var{queue}.insert($n_0$)
+        \EndFor
+        \State \var{closed} \ceq Set()
+        \State \var{step} \ceq 0
+        \While{\Not \var{queues}.is\_empty()}
+            \State \var{queue} \ceq \var{queues}[\var{step} \textbf{mod} length(\var{queues})]
+            \Loop
+                \If{\var{queue}.is\_empty()}
+                    \State \var{queues}.remove(\var{queue})
+                    \Break \Comment{this queue is finished}
+                \EndIf{}
+                \State $n$ \ceq \var{queue}.pop()
+                \If{$n$.state $\in$ \var{closed}}
+                    \Continue \Comment{ensure this queue \quoted{gets its turn}}
+                \EndIf
+                \State \var{closed}.insert($n$.state)
+                \If{is\_goal($n$.state)}
+                    \State \Return extract\_path($n$)
+                \EndIf
+                \ForAll{$s'\in$ succ($n$.state)}
+                    \If{$s'\notin$ \var{closed}} \Comment{$s'$ might have been closed before}
+                        \State $n'$ \ceq Node($n$, $s'$)
+                        \ForAll{\var{queue} $\in$ \var{queues}}
+                            \State \var{queue}.insert($n'$)
+                        \EndFor
+                    \EndIf
+                \EndFor
+                \State \var{step} \ceq \var{step} + 1
+                \Break \Comment{move to the next queue}
+            \EndLoop
+        \EndWhile
+        \State \Return \textbf{unsolvable}
+    \end{algorithmic}
+\end{algorithm}
+
+% This pseudo-implementation does not yet account for how information is shared between different data structures; also, extract\_path will likely be replaced with an idea more closely resembling the (future) concrete implementation. I will address these issues later, because any constructs I come up with now without being familiar with Fast Downward will likely need to be adapted anyways.
+
+% ExplorationQueue is a stand-in for, e.g., HGQueue (for Type-GBFS using $\langle h,g\rangle$). HGQueue internally buckets states by $\langle h,g\rangle$. On pop(), it handles both the type selection as well as the node selection. The behavior of these selections could be given by further specialisations, for example SoftminUniformHGQueue could mean softmin to select the type and uniform sampling for the node.

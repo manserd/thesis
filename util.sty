@@ -71,5 +71,14 @@
 \NewDocumentCommand{\quoted}{m}{``#1''}
 
 \usepackage{mathtools} % \coloneq.
-
 \NewDocumentCommand{\ceq}{}{\ensuremath{\coloneq}\xspace}
+
+\newcommand{\comment}[1]{\begin{list}{}{\leftmargin=-5em}\item\color{black!50}#1\end{list}}
+
+\DeclareMathOperator{\Succ}{succ}
+\DeclareMathOperator{\Level}{level}
+\DeclareMathOperator{\Hw}{hw}
+\DeclareMathOperator{\Lw}{lw}
+\DeclareMathOperator{\Bts}{BTS}
+\DeclareMathOperator{\Hits}{HITS}
+\DeclareMathOperator{\Lots}{LOTS}

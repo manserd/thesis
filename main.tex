@@ -6,43 +6,45 @@
 \usepackage{amssymb}
 \usepackage{natbib} % \citet, \citep.
 \usepackage{xcolor} % \color.
+\usepackage{float} % [H].
+\usepackage[normalem]{ulem} % \sout.
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \algtext*{EndIf}
 \algtext*{EndWhile}
 \algtext*{EndFor}
+\algtext*{EndLoop}
 \algnewcommand{\New}{\textbf{new}\ }
 \algnewcommand{\Not}{\textbf{not}\ }
 \algrenewcommand\algorithmicforall{\textbf{for each}}
 \algrenewcommand\algorithmicdo{\unskip:}
 \algrenewcommand\algorithmicthen{\unskip:}
+\algnewcommand{\algorithmicbreak}{\textbf{break}}
+\algnewcommand{\Break}{\State \algorithmicbreak}
+\algnewcommand{\algorithmiccontinue}{\textbf{continue}}
+\algnewcommand{\Continue}{\State \algorithmiccontinue}
 
 \usepackage{util}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
-\newcommand{\comment}[1]{%
-  \begin{quote}
-    \color{black!50}#1
-  \end{quote}
-}
 
 \onehalfspacing
 
 \begin{document}
 
-% \markdownInput{content/0-front.tex}
+% \input{build/0-front.tex}
 
 % \tableofcontents
 
 % \input{build/1-intro.tex}
 \input{build/2-background.tex}
-% \input{build/3-algos.tex}
+\input{build/3-algos.tex}
 % \input{build/4-impl.tex}
 % \input{build/5-res.tex}
 
-% \bibliographystyle{apalike}
-% \bibliography{main}
+\bibliographystyle{apalike}
+\bibliography{main}
 
 \end{document}

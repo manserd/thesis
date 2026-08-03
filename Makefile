@@ -4,7 +4,7 @@ all: main.tex
 	cp build/main.pdf .
 
 clean:
-	git clean -fdX
+	rm -rf build
 
 fresh:
 	make clean
