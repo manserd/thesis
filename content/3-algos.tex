@@ -1,24 +1,33 @@
 \chapter{Algorithms}
 
+% A lot of details here aren't fully figured out: there are inconsistencies with how methods are invoked and where data is stored/coming from (e.g. Strategy::add requires the parent state, but there's no explicit mechanism for how it would access that information). Some of this can probably be left a bit vague, but currently I feel like it's too vague.
+
+This chapter introduces algorithms that apply the learnings from the previous chapters.
+
+\section{Generic Search}
+
+We start by introducing an algorithm for generic state space search.
+
 \begin{algorithm}
-    \caption{GBFS without reopening}
+    \caption{Generic search}
+    \label{alg:generic}
     \begin{algorithmic}[1]
-        \State \var{open} \ceq \New List ordered by h
-        \If{$\text{h(init())}<\infty$}
-        \State \var{open}.insert(\New Node(\textbf{null}, init()))
+        \State \var{open} \ceq \New OpenStateProvider
+        \State \var{s} \ceq the initial state
+        \If{$s$ is not a dead end}
+        \State \var{open}.add($s$)
         \EndIf
-        \State \var{closed} \ceq \New Set
-        \While{\Not \var{open}.is\_empty()}
-        \State $n$ \ceq \var{open}.pop\_min()
-        \If{$n$.state $\notin$ \var{closed}}
-        \State \var{closed}.insert($n$.state)
-        \If{is\_goal($n$.state)}
-        \State \Return extract\_path($n$)
+        \State \var{closed} \ceq \New set of states
+        \While{\var{open} can provide a state}
+        \State $s$ \ceq \var{open}.get\_next\_state()
+        \If{$s$ $\notin$ \var{closed}}
+        \State \var{closed}.add($s$)
+        \If{$s$ is a goal state}
+        \State \Return \textbf{solution}
         \EndIf
-        \ForAll{$s'\in$ succ($n$.state)}
-        \If{h($s'$) $<\infty$}
-        \State $n'$ \ceq \New Node($n$, $s'$)
-        \State \var{open}.insert($n'$)
+        \ForAll{successor $s'$ of $s$}
+        \If{$s'$ is not a dead end}
+        \State \var{open}.add($s'$)
         \EndIf
         \EndFor
         \EndIf
@@ -27,51 +36,90 @@
     \end{algorithmic}
 \end{algorithm}
 
-% extract\_path is currently undefined, will revisit later
+\Cref{alg:generic} is intentionally abstract and omits details that are irrelevant for our work. Notably, this algorithm works directly with \textit{states} rather than some notion of \kw{search nodes}: this is fine for explaining our mechanisms here, because our algorithms maintain a set of \kw{closed} states, meaning one state can never be reachable on more than one path during a single search. We also do not differentiate between the ideas of \kw{lazy} and \kw{eager} search: in a real implementation using search nodes, a \kw{lazy} algorithm delays the generation of successor \kw{nodes} (a construct that holds a state and a parent node) until they are actually explored, while an \kw{eager} one generates them immediately. This, again, is not important here, since we ignore the concept of search nodes altogether, but know that we model our algorithms with \kw{eager} search in mind.
 
-% open/closed lists, explain (no) reopening (satisficing)
+The core idea we intend to introduce with this representation is that of the \kw{OpenStateProvider}. This is a conceptual construct that mimics the behavior of an \kw{open list}, with the difference that, unlike a regular open list, the strategy it uses to select a state during \texttt{get\_next\_state} can change between calls. Importantly, \kw{OpenStateProvider} maintains separate lists of open states for each strategy: this means that it is possible for two calls to \texttt{get\_next\_state} to return the same state. This is not a problem, because we explicitly check for previously closed states, but it does have some consequences, which we will briefly mention in the next section.
 
-\begin{algorithm}[H]
-    \caption{Queue-alternating GBFS (without reopening, assuming $h(s)<\infty\forall s$)}
-    \begin{algorithmic}[1]
-        \State \var{queues} \ceq List(StandardQueue(), ExplorationQueue())
-        \State $n_0$ \ceq Node(\textbf{null}, init())
-        \ForAll{\var{queue} $\in$ \var{queues}}
-            \State \var{queue}.insert($n_0$)
-        \EndFor
-        \State \var{closed} \ceq Set()
-        \State \var{step} \ceq 0
-        \While{\Not \var{queues}.is\_empty()}
-            \State \var{queue} \ceq \var{queues}[\var{step} \textbf{mod} length(\var{queues})]
-            \Loop
-                \If{\var{queue}.is\_empty()}
-                    \State \var{queues}.remove(\var{queue})
-                    \Break \Comment{this queue is finished}
-                \EndIf{}
-                \State $n$ \ceq \var{queue}.pop()
-                \If{$n$.state $\in$ \var{closed}}
-                    \Continue \Comment{ensure this queue \quoted{gets its turn}}
-                \EndIf
-                \State \var{closed}.insert($n$.state)
-                \If{is\_goal($n$.state)}
-                    \State \Return extract\_path($n$)
-                \EndIf
-                \ForAll{$s'\in$ succ($n$.state)}
-                    \If{$s'\notin$ \var{closed}} \Comment{$s'$ might have been closed before}
-                        \State $n'$ \ceq Node($n$, $s'$)
-                        \ForAll{\var{queue} $\in$ \var{queues}}
-                            \State \var{queue}.insert($n'$)
-                        \EndFor
-                    \EndIf
-                \EndFor
-                \State \var{step} \ceq \var{step} + 1
-                \Break \Comment{move to the next queue}
-            \EndLoop
-        \EndWhile
-        \State \Return \textbf{unsolvable}
-    \end{algorithmic}
-\end{algorithm}
+We now introduce a specialization of generic search.
 
-% This pseudo-implementation does not yet account for how information is shared between different data structures; also, extract\_path will likely be replaced with an idea more closely resembling the (future) concrete implementation. I will address these issues later, because any constructs I come up with now without being familiar with Fast Downward will likely need to be adapted anyways.
+\section{Alternating Search}
 
-% ExplorationQueue is a stand-in for, e.g., HGQueue (for Type-GBFS using $\langle h,g\rangle$). HGQueue internally buckets states by $\langle h,g\rangle$. On pop(), it handles both the type selection as well as the node selection. The behavior of these selections could be given by further specialisations, for example SoftminUniformHGQueue could mean softmin to select the type and uniform sampling for the node.
+\kw{Alternating search} is one instance of generic search that declares \var{OpenListProvider} as follows:
+
+\begin{algorithmic}[1]
+    \State \var{open} \ceq \New OpenStateProvider alternating between strategies $A$ and $B$
+\end{algorithmic}
+
+This algorithm changes how it selects states for every search step. Note that, as a consequence of \kw{OpenStateProvider} maintaining separate open lists per strategy, this does not guarantee that both strategies get applied an equal number of times: if strategy~$A$ returns some state~$s$ (thus closing it), if strategy~$B$ then selects that same state during \textit{its} turn, it essentially forfeits its turn and control remains with strategy~$A$.
+
+% Not directly related to the text, but a general thought: currently, we only support a 50/50 balance between exploitation and exploration, mainly because of how we use FD's alternating queue. It would be interesting to balance these differently to see how that affects the results (once we get to that stage).
+
+\section{Type-Based Strategy}
+
+We now introduce a model for a type-based open state provider strategy: here, the open list is partitioned into \kw{buckets}, and state selection implies randomly selecting a state from a randomly selected bucket.
+
+% "randomly" here is obviously too vague. I need to word this differently, because we will also be using different sampling techniques (not just uniform).
+
+% This model is confusing at the moment, because it uses the same interface as OpenStateProvider, making it seem as if they're the same thing. What I'm trying to model is this: OpenStateProvider::add() selects a strategy, and then calls that strategy's add() (which is what is shown here). To communicate that effectively, I need to change something here.
+
+\begin{algorithmic}[1]
+    \Function{new}{ }
+        \State \textbf{this}.\var{buckets} \ceq \New set of buckets
+    \EndFunction
+    \Function{add}{parent,s}
+        \State \var{parent\_type} \ceq type of \var{parent} according to TypeEvaluator
+        \State \var{s\_type} \ceq type of \var{s} according to TypeEvaluator
+        \If{\var{parent\_type} = \var{s\_type}}
+            \State add $s$ to the bucket for type \var{parent\_type} in \textbf{this}.\var{buckets}
+        \Else:
+            \If{there is no bucket for type \var{s\_type} in \textbf{this}.\var{buckets}}
+                \State create the bucket
+            \EndIf
+            \State add $s$ to the bucket
+        \EndIf
+    \EndFunction
+    \Function{get\textunderscore next\textunderscore state}{ }
+        \State \var{bucket} \ceq some random bucket from \textbf{this}.\var{buckets}
+        \State $s'$ \ceq some random state from \var{bucket}
+        \State delete \var{bucket} if it is empty
+        \State \Return $s'$
+    \EndFunction
+\end{algorithmic}
+
+This model introduces the notion of a \kw{TypeEvaluator} as the mechanism by which type-based strategies assign types to states. By defining the some concrete instances of this evaluator, we can finally model our full algorithm.
+
+\section{Heuristic Improvement-Based Strategy}
+
+The following models a heuristic improvement-based TypeEvaluator.
+
+\begin{algorithmic}[1]
+    \Function{determine\_type}{\var{parent}, $s$}
+        \If{$\mathrm{h}(s)<\mathrm{h}(\var{parent})$}
+            \If{some earlier sibling of $s$ induced a new type $t$}
+                \State \Return type identifier for $t$
+            \Else
+                \State \Return \New type identifier
+            \EndIf
+        \Else:
+            \State \Return type identifier of \var{parent}
+        \EndIf
+    \EndFunction
+\end{algorithmic}
+
+\section{Low-Water Mark-Based Strategy}
+
+The following models a low-water mark-based TypeEvaluator.
+
+\begin{algorithmic}[1]
+    \Function{determine\_type}{\var{parent}, $s$}
+        \If{$\mathrm{lw}(s)<\mathrm{lw}(\var{parent})$}
+            \If{some earlier sibling $s'$ of $s$ induced a new type $t$ \textbf{and} $\mathrm{lw}(s)=\mathrm{lw}(s')$}
+                \State \Return type identifier for $t$
+            \Else
+                \State \Return \New type identifier
+            \EndIf
+        \Else:
+            \State \Return type identifier of \var{parent}
+        \EndIf
+    \EndFunction
+\end{algorithmic}
