@@ -1,0 +1,94 @@
+\chapter{Main Part}
+
+As discussed in the previous chapter, type-based stochastic exploration requires an effective type system.
+
+\section{BTS as Type System}
+
+%hypothetical, i'm leaving this here while i work through the paper
+
+%"In the BTS type system, all nodes within the same plateau or crater will reside in the same bench."
+%intra- and inter-UHR exploration
+
+%"nodes found along very different paths — and thus likely to be in very different locations of the search space — are unlikely to be grouped together unless they are both in a massive UHR" (Tomasz)
+%breadth/depth-based diversification
+
+%issues:
+%- BTS only spans states that GBFS will naturally consider for expansion, but we also want to consider others
+%- high-water mark is only known post-search
+
+\section{BTS Approximations}
+
+%needs intro
+
+\subsection{Subspaces}
+
+%1. benches are contiguous: all states in a bench are reachable from its root state
+%2. any state on the bench satisfies a "bench candidacy test"
+%3. any exit state satisfies an "exit test"
+%this is generalized to a "(state-space) subspace" that allows arbitrary candidacy and exit tests
+
+%subspace definition
+
+%a bench is a special case of a subspace
+
+\subsubsection{Heuristic Improvement Subspace}
+
+A \kw{heuristic improvement subspace}[HI subspace], for some root state $s$, spans all states $s'\neq s$ reachable from $s$ via \quoted{a path along which the heuristic value never decreases}.
+
+%! definition incomplete: successors of $s$ with $h$ greater than the level are not candidates
+
+%def HI subspace level $\Level_\text{HI}(s)=h(\Succ(s))$
+
+\subsubsection{Low-Water Mark Subspace}
+
+The \kw{low-water mark} for a heuristic $h$ and path $p=\langle s_I,\ldots,s\rangle$ is $\Lw_h(p)=\min_{s'\in p}h(s')$, or simply, the lowest heuristic value encountered along a path from the initial state.
+
+%$\Lw_h(s)$ is an abuse of notation: it should be more like $\Lw_h(\langle s_I,\ldots,s\rangle)$
+
+A \kw{low-water mark subspace}[LW subspace], for some root state $s$, spans all states $s'\neq s$ reachable from $s$ via a path along which the heuristic value does not fall below the LW subspace level. Or, as \citet{tomasz2024} put it: the LW subspace exit states are those that have a successor which sets a new low-water mark.
+
+%! definition incomplete: successors of $s$ with $h$ greater than the level are not candidates
+
+%def LW subspace level
+
+\section{Equivalence of Approximation and BTS}
+
+%again, i'm mainly writing this for my own understanding at this point
+
+%def monotonically non-increasing MNI (h can never increase)
+
+%lemma 4.1: h=hw=lw for all s in MNI SS topos w/o dead-ends
+%lemma 4.2: they are also craterless, and h=level for all inner and exit states
+%lemma 4.3: and $\calB(s)=\bbB_\text{HI}(s)=\bbB_\text{LW}(s)\forall$ progress states in $\Bts(\calT)$
+
+%use same inductive definition of benches for new transition systems:
+%\kw{heuristic improvement transition system}[HITS], \kw{low-water mark transition system}[LOTS]
+
+%theorem 4.4: $\calB(s)\in\Bts(\calT)\iff\bbB_\text{HI}(s)\in\Hits(\calT)\iff\bbB_\text{LW}\in\Lots(\calT)$
+
+%the hypothesis is that even though HITS and LOTS are only perfect approximations for BTS in a very restricted setting, using them as type systems would still bring benefits in a general state space that isn't too far off those requirements
+
+\section{New Type Systems}
+
+%existing definitions don't cover the entire state space: successors of a root space that don't make progress ($h(s')>\Level(s)$) can neither be part of the previous subspace (because successors of exit states aren't considered as candidates) nor part of the current one (because successors of the root space that don't make progress are disqualified from being candidates)
+%"in our type systems, a notion of progress is used, bench candidacy is not used, and the non-improving children of progress states are included"
+
+%HI: upon expansion of $s$, if some child of $s$ has in improved heuristic value, then \textbf{all} such children are added to a single new type. all remaining children are added to the current type. for non-progress states $s$ ($h(s')\geq h(s)$), this is functionally equivalent to the existing definition; if $s$ \emph{is} a progress state, this deviates from the existing definition in that inner states may now \emph{not} only be reached via non-progress states.
+
+%LW: upon expansion of $s$, for every improved low-water mark among its children, a corresponding new type is created. all non-improving children are added to the current type.
+
+%* incremental processing of states
+
+%paragraph on type trees
+
+%probabilistic completeness
+
+\section{Adding Exploration to GBFS}
+
+%queue alternation: alternate between a standard GBFS queue and an exploration queue; both queues contain the same states but sort them according to different metrics.
+
+%baselines: GBFS, Type-GBFS using $\langle h,g\rangle$, Softmin-Type with $\tau=1$
+
+%inter-UHR exploration via types, intra-UHR exploration via nodes in a type
+
+%sampling: uniform selection (U) vs. biased heuristic selection (H) using softmin; depth selection (D)

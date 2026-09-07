@@ -1,42 +1,23 @@
 \chapter{Background}
 
-This chapter introduces relevant concepts and notation.
-
-% for now, definitions mostly match \citet{tomasz2024}.
-
-\section{State Spaces}
-
-We define a \kw{state space} as a tuple $$\calS=\langle S,s_I,S_G,\Succ\rangle,$$ with $S$ the set of \kw{states}, $s_I\in S$ the \kw{initial state}, $S_G\subseteq S$ the set of \kw{goal states}, and $\Succ:S\ar\calP(S)$ the \kw{successor generator function}.
-
-% is $\calP$ for the power set sufficiently \quoted{standard} to be used without comment?
-
-\section{Heuristics}
-
-A \kw{heuristic} $h:S\ar\bbR_0^+\cup\{\infty\}$ maps a state $s$ to the approximate distance (following transitions in the state space graph) from $s$ to the nearest goal state.
-
-% $\infty$ might not be necessary for our purposes
-% also, this should be rewritten so it does not rely on the later definition of \kw{transitions}
-
-% $h(S)=\min_{s\in S}h(s)$
-
-% state space topology $\calT=\langle\calS,h\rangle$
+\kw{Automated planning} is a branch of artificial intelligence research concerned with automated problem-solving. More formally: given a representation of some environment, and the means available to manipulate said environment, the objective is to find a sequence of actions which, when executed starting at the \kw{initial state}, transforms the environment into some desired \kw{goal state}.
 
 \section{State Space Search}
 
-A state space induces a \kw{state space graph} with nodes $S$ and \kw{transitions} (arcs) $s\ar s'$ for all $s\in S$ and corresponding $s'\in\Succ(s)$. To model algorithms that interact with this graph, we introduce a generic interface:
+\kw{State space search} is one technique used to solve a subset of these planning problems. Consider an environment that is deterministic and static (meaning it changes predictably and only when the agent\footnote{\textit{The agent} is a single abstract entity executing the actions in an environment. This work only concerns itself with single-agent scenarios, but it should be noted that this restriction does not apply to the whole of automated planning.} executes an action) and is fully observable and representable via a set of discrete variables.
 
-\begin{quote}
-    \texttt{init()} generates the initial state
-    \\\texttt{is\_goal(s)} returns \texttt{true} if $s$ is a goal state, else \texttt{false}
-    \\\texttt{succ(s)} returns the set of successor states for $s$
-    \\\texttt{h(s)} returns the heuristic value for $s$
-\end{quote}
+% Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and the search simply consists of repeatedly applying such actions until the current state matches a goal state.
+Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and a search proceeds as follows: first, add the initial state to a collection of discovered states (called \kw{open list}). Then, until a goal state is found, remove some state from the open list, consider it the new current state, and extend the open list by adding to it all the newly reachable states.
 
-Starting at the initial state, a state space is searched (\kw{explored}) as follows: if the current state is in the goal states, stop; otherwise, select (using some algorithm) a successor state from the successor generator function and repeat.
+\subsection{State Spaces}
+
+%Definition environment?
+
+We formally represent a state space search problem via a \kw{state space}. A \kw{state space} is a tuple $$\calS=\langle S,A,\mathrm{cost},T,s_I,S_G\rangle,$$ with $S$ the finite set of states, $A$ the finite set of actions, $\mathrm{cost}:A\ar\bbN_0$ the \kw{action costs}, $T\subseteq S\times A\times S$ the \kw{transition relation}, $s_I\in S$ the \kw{initial state}, and $S_G\subseteq S$ the \kw{goal states}.
+
+Note that we include action costs in our definition primarily to enable us to discuss the \kw{path cost} $g$, which is the sum of all action costs along a path from the initial state to the subject state. Unless stated otherwise, assume all action costs are $1$.
 
 % explain open list?
-
-% this definition models $\Succ$ as a pure (as in stateless) function, requiring us to introduce an additional construct (\quoted{some algorithm}) that handles the closed list/decides which successors are preferred/breaks ties, etc
 
 % set of all $s$-plans (path to goal from $s$) $P(s)$
 
@@ -44,15 +25,86 @@ Starting at the initial state, a state space is searched (\kw{explored}) as foll
 
 % \quoted{$s\in\calS$} means $s\in S$
 
+\section{Heuristic Search}
+
+A state space search algorithm that can differentiate between states only in regards to their path costs and whether or not they are goal states is sometimes called an \kw{uninformed} or \kw{blind search algorithm}.
+
+As a state space grows past a trivial size, the number of ``wrong'' paths that such blind algorithms will explore before finding a solution can grow rapidly. \kw{Informed} or \kw{heuristic search algorithms} are a family of search algorithms that try to avoid exploring bad or dead-end paths by prioritizing states which are closer to a goal state. This approximate distance to a goal state is quantified by a \kw{heuristic value}, provided by a \kw{heuristic}.
+
+\subsection{Heuristic}
+
+A \kw{heuristic} $h:S\ar\bbN_0\cup\{\infty\}$ maps a state $s$ to the approximate distance from $s$ to the nearest goal state.
+
+%We use natural numbers here instead of reals to match Fast Downward.
+
+% $h(S)=\min_{s\in S}h(s)$
+
+% state space topology $\calT=\langle\calS,h\rangle$
+
 \section{Greedy Best-First Search}
 
-\kw{Greedy best-first search}[GBFS] is a search algorithm that always selects the successor state with the smallest heuristic value.
+\kw{Greedy best-first search}[GBFS] is the immediate product of introducing heuristics: among the actions applicable for a given current state, this search algorithm always selects the action leading to the successor state with the smallest heuristic value.
 
-\section{High-Water Mark}
+GBFS is an especially good fit for \kw{satisficing problems}, where path cost is irrelevant as long as a solution is found: its combination of ignoring path cost and stubbornly following the heuristic tends to yield a solution quickly. However, this overreliance on the heuristic also makes GBFS vulnerable.
 
-$$\Hw_h(s)\ceq\begin{cases}\min_{p\in P(s)}(\max_{s'\in p}h(s')), & \text{if } P(s)\neq\emptyset; \\ \infty, & \text{otherwise}.\end{cases}$$
+An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. The presence of UHRs can severely worsen GBFS' performance: once the algorithm is trapped in a UHR, it is forced to search the entire region exhaustively or until it manages to escape back to an informed region.
 
-If the \kw{maximum heuristic value} refers to the highest encountered heuristic value along some path, then $\Hw_h(s)$ selects the lowest such maximum heuristic value (of the heuristic $h$) among all paths from $s$ to a goal. Or intuitively, following the definition by \citet{heusner2017}: the high-water mark shows how high $h$ must climb before a solution is found.
+% An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. We name two kinds of UHRs.
+% "A crater is defined as the set of all states s' reachable from a crater entry s along a path on which for any s'', h(s'') lss level(s)."
+% "a plateau is a subset of states on the same bench that all have the same heuristic value"
+
+% Once GBFS enters a UHR, its greedyness will trap it in the region until it has either searched all of it or manages to find a way out. In this case, it can be beneficial to occasionally ignore the advice of the heuristic and instead take a random transition. This is called \kw{stochastic exploration}.
+
+%needs citation
+
+\section{Stochastic Exploration}
+
+\kw{Stochastic exploration} is one method that can mitigate the issue of GBFS getting stuck in UHRs. Here, instead of always stubbornly following the heuristic, we introduce a mechanism that allows the algorithm to occasionally ignore the advice of the heuristic and instead select a successor stochastically.
+
+%'The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving directly towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal to the goal states). The most immediate control available to us for tuning this balance is the frequency of exploratory expansions compared to regular exploitative ones.
+
+%I'm leaving this unfinished for now: if we are able to test different balancing configurations here, I envision using some kind of ratio to talk about them. For example, an exploration-to-exploitation ratio of 1/1=1 corresponds to traditional alternating queues. For the time being, something simpler:
+
+The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving directly towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal to the goal states). One simple mechanism used to achieve this balance is an \kw{alternating open list}, which alternates between returning the open state with the lowest heuristic value (like in regular GBFS) and returning a random open state.
+
+\subsection{$\epsilon$-GBFS}
+
+\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but this is not guaranteed. Consider an instance of GBFS trapped sufficiently deep in a UHR for its open list to be dominated by states within that same region: in such a situation, when sampling the open list directly, the probability of selecting a state that will allow us to ``escape'' the UHR is vastly smaller than the probability of selecting one of the intra-UHR states. As such, $\epsilon$-GBFS effectively behaves like blind search in precisely the situation it aims to avoid.
+
+% \kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but becomes less effective as GBFS becomes more and more trapped in a UHR, because the open list will be dominated by states within that region.
+
+\subsection{Type-Based Stochastic Exploration}
+
+\kw{Type-based stochastic exploration} is an evolution of $\epsilon$-GBFS that attempts to address its problems. Here, instead of sampling directly from the open list, we instead first partition the open states into a set of \kw{types} according to some common characteristics. These ``common characteristics'' are formalized by a \kw{type system}.
+
+Successor selection then consists of first selecting a type, followed by selecting a state from that type. Given an appropriate type system, this eliminates biases awarded to overrepresented types of states, making exploratory expansions more effective. Type-based stochastic exploration also introduces two new controls for us to tune in an attempt to improve the balance between exploitation and exploration, those being the sampling strategy used to select a type, and the sampling strategy used to select a state from that type.
+
+%There's more to say here regarding those two controls, but I don't know yet what we'll do with them, so I'm leaving it for now.
+
+A good type system is fundamental to the effectiveness of type-based stochastic exploration. One established type system is the \kw{$\langle h,g\rangle$ type system}, which buckets those states together that have the same heuristic value $h$ and path cost $g$.
+
+%Is there more to say here regarding $\langle h,g\rangle$?
+
+% \kw{Type-GBFS} attempts to eliminate this bias: it uses a \kw{type system} to bucket states by shared characteristics. Random successors are then selected by first selecting such a bucket, called \kw{type}, followed by selecting the actual successor from within the chosen type.
+% The performance of Type-GBFS depends on which type system is used, or in other words, which characteristics are used to bucket states.
+
+% \subsubsection{$\langle h,g\rangle$ Type System}
+% The \kw{$\langle h,g\rangle$ type system} buckets those states together that have the same heuristic value $h$ and \kw{path cost} $g$. The \kw{path cost} is the sum of the costs of all the transitions taken by GBFS to arrive at the current state.
+% %we otherwise ignore transition costs, so maybe we will be able to omit this. will see later. also, this definition of path cost is a bit awkward, because g is not given for a state but rather for a node in the search tree, which hasn't really been introduced at this point
+% \subsubsection{Biased Type Selection}
+% \kw{Biased type selection} builds on the $\langle h,g\rangle$ type system: here, we first use some function $f$ to select $h$ with a bias towards lower values. Next, we select some $\langle h,g\rangle$ bucket with matching $h$ uniformly at random. Finally, we select some successor from the chosen bucket, again uniformly at random.
+% \subsubsection{Softmin-Type}
+% \kw{Softmin-type} is a concrete form of biased type selection that uses $f\ceq\op{softmin}$.
+% %missing definition of softmin
+% %notes about probabilistic completeness
+
+\section{Bench Transition System}
+
+Consider GBFS traversing along some path to a goal state, and imagine a body of water whose water level rises and falls along with the heuristic values encountered by GBFS during the traversal. Once the goal state is reached, the walls of this body of water show a transition from wet to dry at a height corresponding to the maximum heuristic value encountered by GBFS along the way: this is the \kw{high-water mark} for this path.
+
+To complete our definition of the \kw{high-water mark}: first, for a given starting state $s$, there might be multiple different paths leading to a solution. We will define the \kw{high-water mark} for the set of solution paths from $s$, $P(s)$, as the lowest \kw{high-water mark} among the individual paths. Second, not every starting state leads to a solution: in this case, the \kw{high-water mark} is infinite.
+
+Thus, formally, the \kw{high-water mark} for a starting state $s$ under heuristic $h$ is $$\Hw_h(s)\ceq\begin{cases}\min_{p\in P(s)}(\max_{s'\in p}h(s')), & \text{if } P(s)\neq\emptyset; \\ \infty, & \text{otherwise}.\end{cases}$$
 
 % check reference definition
 
@@ -60,169 +112,37 @@ If the \kw{maximum heuristic value} refers to the highest encountered heuristic 
 
 % $\Hw_h(S)\ceq\min_{s\in S}\Hw_h(s)$
 
-We say GBFS \kw{makes progress} when it encounters a state with a lower high-water mark among its successors: $\Hw_h(\Succ(s))<\Hw_h(s)$. Such a state $s$ is called a \kw{progress state}.
+Since the high-water mark cannot rise, a transition leading to a new lowest high-water mark along a path can be thought of achieving a new ``benchmark''. Using this perspective, we can see that the high-water mark separates the search space into ``benches'' of progress.
 
-\section{Benches}
+In pursuit of a formal definition of this observation, consider first that states that sit at the ``edge'' of these transitions, i.e. states that have a successor with a new lowest high-water mark, are called \kw{progress states}. We also say these states \kw{make progress}. Then, for any state $s$,
 
-Let $s$ be some state, and consider the lowest high-water mark among its successors, $\Hw_h(\Succ(s))$, its \kw{bench level}.
+\begin{enumerate}
+    \item the \kw{bench level} of $s$ is the lowest high-water mark among the successors of $s$;
+    \item the \kw{inner states} of $s$ are all states $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$, but which are \emph{not} progress states; and
+    \item the \kw{exit states} of $s$ are all states $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$ but which \emph{are} progress states.
+\end{enumerate}
 
-Any state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level, but which is \emph{not} a progress state, can be considered part of a \quoted{bench} induced by $s$. We call these states the \kw{inner states}.
+The \kw{bench} of $s$ is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ the inner states of $s$ and $E$ the exit states of $s$. Note that we use $I(\calB(s))$ and $E(\calB(s))$ to refer to the inner and exit states of $\calB(s)$.
 
-Naturally, a state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level but which \emph{is} a progress state can thus be considered at the \quoted{edge} of the aforementioned \quoted{bench}. These states are called the \kw{exit states}.
-
-Combining the two: for any state $s$, its \kw{bench} is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ being the inner states and $E$ the exit states.
-
-Note that we may use $I(\calB(s))$ and $E(\calB(s))$ to refer to the inner and exit states of $\calB(s)$.
-
-% check reference definition
-
-% (bench) $\Level(s)=\Hw_h(\Succ(s))$
-% the bench level for a bench induced by s is the high-water mark of its successors because every bench except for the one induced by the initial state is induced by an exit state of a previous bench, which itself still sat at the bench level of that previous bench. note that this means the initial state is never candidate of any bench. also, recall that our GBFS does not reopen states, so cycles are no concern.
-
-\section{Bench Transition System}
-
-A \kw{bench transition system} $\Bts(\calT)$ captures the benches for a given state space topology \calT. $\Bts(\calT)$ is a directed graph $\langle V,E\rangle$ that is constructed as follows:
+Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space \calS and heuristic $h$. $\Bts(\calS,h)$ is a directed graph $\langle V,E\rangle$ that is constructed as follows:
 
 \begin{enumerate}
     \item $\calB(s_I)\in V$.
     \item If $\calB(s)\in V$ and $s'\in E(\calB(s))$ and $s'\notin S_G$, then $\calB(s')\in V$ and $\langle\calB(s),\calB(s')\rangle\in E$.
 \end{enumerate}
 
+A bench transition system can be thought of as an ``evolutionary'' tree, where ``evolving'' means making progress. 
+
+%I want to find a better way of tying this section into the background. Also, the end is a bit abrupt.
+
 % "set of episodes"
 
-\section{Uninformed Heuristic Regions}
+% Let $s$ be some state, and consider the lowest high-water mark among its successors, $\Hw_h(\Succ(s))$, its \kw{bench level}.
+% Any state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level, but which is \emph{not} a progress state, can be considered part of a \quoted{bench} induced by $s$. We call these states the \kw{inner states}.
+% Naturally, a state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level but which \emph{is} a progress state can thus be considered at the \quoted{edge} of the aforementioned \quoted{bench}. These states are called the \kw{exit states}.
+% Combining the two: for any state $s$, its \kw{bench} is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ being the inner states and $E$ the exit states.
 
-An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. We name two kinds of UHRs.
+% check reference definition
 
-\subsection{Craters}
-
-% "A crater is defined as the set of all states s' reachable from a crater entry s along a path on which for any s'', h(s'') lss level(s)."
-
-\subsection{Plateaus}
-
-% "a plateau is a subset of states on the same bench that all have the same heuristic value"
-
-\section{Stochastic Exploration}
-
-Once GBFS enters a UHR, its greedyness will trap it in the region until it has either searched all of it or manages to find a way out. In this case, it can be beneficial to occasionally ignore the advice of the heuristic and instead take a random transition. This is called \kw{stochastic exploration}.
-
-% needs citation
-
-\subsection{$\epsilon$-GBFS}
-
-\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but becomes less effective as GBFS becomes more and more trapped in a UHR, because the open list will be dominated by states within that region.
-
-\subsection{Type-GBFS}
-
-\kw{Type-GBFS} attempts to eliminate this bias: it uses a \kw{type system} to bucket states by shared characteristics. Random successors are then selected by first selecting such a bucket, called \kw{type}, followed by selecting the actual successor from within the chosen type.
-
-The performance of Type-GBFS depends on which type system is used, or in other words, which characteristics are used to bucket states.
-
-\subsubsection{$\langle h,g\rangle$ Type System}
-
-The \kw{$\langle h,g\rangle$ type system} buckets those states together that have the same heuristic value $h$ and \kw{path cost} $g$. The \kw{path cost} is the sum of the costs of all the transitions taken by GBFS to arrive at the current state.
-
-% we otherwise ignore transition costs, so maybe we will be able to omit this. will see later. also, this definition of path cost is a bit awkward, because g is not given for a state but rather for a node in the search tree, which hasn't really been introduced at this point
-
-\subsubsection{Biased Type Selection}
-
-\kw{Biased type selection} builds on the $\langle h,g\rangle$ type system: here, we first use some function $f$ to select $h$ with a bias towards lower values. Next, we select some $\langle h,g\rangle$ bucket with matching $h$ uniformly at random. Finally, we select some successor from the chosen bucket, again uniformly at random.
-
-\subsubsection{Softmin-Type}
-
-\kw{Softmin-type} is a concrete form of biased type selection that uses $f\ceq\op{softmin}$.
-
-% missing definition of softmin
-
-% notes about probabilistic completeness
-
-\section{BTS as Type System}
-
-% hypothetical, i'm leaving this here while i work through the paper
-
-% "In the BTS type system, all nodes within the same plateau or crater will reside in the same bench."
-% intra- and inter-UHR exploration
-
-% "nodes found along very different paths — and thus likely to be in very different locations of the search space — are unlikely to be grouped together unless they are both in a massive UHR" (Tomasz)
-% breadth/depth-based diversification
-
-% issues:
-% - BTS only spans states that GBFS will naturally consider for expansion, but we also want to consider others
-% - high-water mark is only known post-search
-
-\section{BTS Approximations}
-
-% needs intro
-
-\subsection{Subspaces}
-
-% 1. benches are contiguous: all states in a bench are reachable from its root state
-% 2. any state on the bench satisfies a "bench candidacy test"
-% 3. any exit state satisfies an "exit test"
-% this is generalized to a "(state-space) subspace" that allows arbitrary candidacy and exit tests
-
-% subspace definition
-
-% a bench is a special case of a subspace
-
-\subsubsection{Heuristic Improvement Subspace}
-
-A \kw{heuristic improvement subspace}[HI subspace], for some root state $s$, spans all states $s'\neq s$ reachable from $s$ via \quoted{a path along which the heuristic value never decreases}.
-
-% ! definition incomplete: successors of $s$ with $h$ greater than the level are not candidates
-
-% def HI subspace level $\Level_\text{HI}(s)=h(\Succ(s))$
-
-\subsubsection{Low-Water Mark Subspace}
-
-The \kw{low-water mark} for a heuristic $h$ and path $p=\langle s_I,\ldots,s\rangle$ is $\Lw_h(p)=\min_{s'\in p}h(s')$, or simply, the lowest heuristic value encountered along a path from the initial state.
-
-% $\Lw_h(s)$ is an abuse of notation: it should be more like $\Lw_h(\langle s_I,\ldots,s\rangle)$
-
-A \kw{low-water mark subspace}[LW subspace], for some root state $s$, spans all states $s'\neq s$ reachable from $s$ via a path along which the heuristic value does not fall below the LW subspace level. Or, as \citet{tomasz2024} put it: the LW subspace exit states are those that have a successor which sets a new low-water mark.
-
-% ! definition incomplete: successors of $s$ with $h$ greater than the level are not candidates
-
-% def LW subspace level
-
-\section{Equivalence of Approximation and BTS}
-
-% again, i'm mainly writing this for my own understanding at this point
-
-% def monotonically non-increasing MNI (h can never increase)
-
-% lemma 4.1: h=hw=lw for all s in MNI SS topos w/o dead-ends
-% lemma 4.2: they are also craterless, and h=level for all inner and exit states
-% lemma 4.3: and $\calB(s)=\bbB_\text{HI}(s)=\bbB_\text{LW}(s)\forall$ progress states in $\Bts(\calT)$
-
-% use same inductive definition of benches for new transition systems:
-% \kw{heuristic improvement transition system}[HITS], \kw{low-water mark transition system}[LOTS]
-
-% theorem 4.4: $\calB(s)\in\Bts(\calT)\iff\bbB_\text{HI}(s)\in\Hits(\calT)\iff\bbB_\text{LW}\in\Lots(\calT)$
-
-% the hypothesis is that even though HITS and LOTS are only perfect approximations for BTS in a very restricted setting, using them as type systems would still bring benefits in a general state space that isn't too far off those requirements
-
-\section{New Type Systems}
-
-% existing definitions don't cover the entire state space: successors of a root space that don't make progress ($h(s')>\Level(s)$) can neither be part of the previous subspace (because successors of exit states aren't considered as candidates) nor part of the current one (because successors of the root space that don't make progress are disqualified from being candidates)
-% "in our type systems, a notion of progress is used, bench candidacy is not used, and the non-improving children of progress states are included"
-
-% HI: upon expansion of $s$, if some child of $s$ has in improved heuristic value, then \textbf{all} such children are added to a single new type. all remaining children are added to the current type. for non-progress states $s$ ($h(s')\geq h(s)$), this is functionally equivalent to the existing definition; if $s$ \emph{is} a progress state, this deviates from the existing definition in that inner states may now \emph{not} only be reached via non-progress states.
-
-% LW: upon expansion of $s$, for every improved low-water mark among its children, a corresponding new type is created. all non-improving children are added to the current type.
-
-% * incremental processing of states
-
-% paragraph on type trees
-
-% probabilistic completeness
-
-\section{Adding Exploration to GBFS}
-
-% queue alternation: alternate between a standard GBFS queue and an exploration queue; both queues contain the same states but sort them according to different metrics.
-
-% baselines: GBFS, Type-GBFS using $\langle h,g\rangle$, Softmin-Type with $\tau=1$
-
-% inter-UHR exploration via types, intra-UHR exploration via nodes in a type
-
-% sampling: uniform selection (U) vs. biased heuristic selection (H) using softmin; depth selection (D)
+% (bench) $\Level(s)=\Hw_h(\Succ(s))$
+% the bench level for a bench induced by s is the high-water mark of its successors because every bench except for the one induced by the initial state is induced by an exit state of a previous bench, which itself still sat at the bench level of that previous bench. note that this means the initial state is never candidate of any bench. also, recall that our GBFS does not reopen states, so cycles are no concern.
