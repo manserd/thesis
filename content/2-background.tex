@@ -1,6 +1,18 @@
 \chapter{Background}
 
-\kw{Automated planning} is a branch of artificial intelligence research concerned with automated problem-solving. More formally: given a representation of some environment, and the means available to manipulate said environment, the objective is to find a sequence of actions which, when executed starting at the \kw{initial state}, transforms the environment into some desired \kw{goal state}.
+\kw{Automated planning} is a branch of Artificial Intelligence research concerned with automated problem-solving. Given some formal representation of an environment, the objective is to find a sequence of actions which transforms the environment from some initial configuration to some desired end configuration.
+
+An environment is described via a finite set of properties such that every configuration of the environment is represented by some assignment of values to these properties. We call these properties the \kw{state variables} $V$, with a non-empty, finite set of possible values $\mathrm{dom}(v)$ for each $v\in V$. A configuration of the environment is called a \kw{state}, which is a total assignment of $V$ according to $\mathrm{dom}$.
+
+\section{Planning Task}
+
+A \kw{planning task} is a tuple $$\Pi=\langle V,\mathrm{dom},I,G,A\rangle,$$ where $V$ is the finite set of \kw{state variables}, $\mathrm{dom}(v)$ is the finite and non-empty set of possible values for $v\in V$, $I$ is the \kw{initial state}, $G$ is the set of \kw{goals}, and $A$ is the finite set of \kw{actions}.
+
+A planning task is a formal representation of some environment, and a \kw{state variable} represents a property of this environment. A \kw{state} is a total assignment of the state variables, and represents one configuration of the environment. More formally: a state $s$ is a set $$s=\{\langle v,x_v\rangle\mid v\in V\},$$ where $x_v\in\mathrm{dom}(v)$ for each $v\in V$.
+
+An \kw{action} describes a change in the configuration of the environment: each action $a\in A$ is associated with a partial assignment of $V$, called the \kw{preconditions}, and another partial assignment of $V$, $\mathrm{eff}(a)$, called the \kw{effects}. Formally: for any action $a$, $$\mathrm{pre}(a)=\{\langle v,x_v\rangle\mid v\in V_\text{pre,a}\},$$ with $V_\text{pre,a}\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_\text{pre,a}$, and $$\mathrm{eff}(a)=\{\langle v,x_v\rangle\mid v\in V_\text{eff,a}\},$$ with $V_\text{eff,a}\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_\text{eff,a}$. An action $a$ is considered \kw{applicable} at a given state $s$ if $s\supseteq\mathrm{pre}(a)$, and \kw{applying} $a$ at $s$ produces a new state $$s'=(s\setminus\{\langle v,x\rangle\mid\langle v,x'\rangle\in\mathrm{eff}(a)\})\cup\mathrm{eff}(a),$$ that is, for each state variable occurring in the effects, its previous assignment is replaced by the new assignment specified in the effects, while all other assignments remain unchanged.
+
+The set of \kw{goals} $G$ describes the properties of the desired end configuration(s) of the environment. A \kw{goal} $g$ is a set $$g=\{\langle v,x_v\rangle\mid v\in V_g\},$$ with $V_g\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_g$. When $s\supseteq g$, we say $s$ \kw{satisfies} $g$, and we call $s$ a \kw{goal state} if $s$ satisfies at least one $g\in G$.
 
 \section{State Space Search}
 
@@ -9,13 +21,23 @@
 % Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and the search simply consists of repeatedly applying such actions until the current state matches a goal state.
 Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and a search proceeds as follows: first, add the initial state to a collection of discovered states (called \kw{open list}). Then, until a goal state is found, remove some state from the open list, consider it the new current state, and extend the open list by adding to it all the newly reachable states.
 
+%"Good as a high-level description but needs formal background."
+
 \subsection{State Spaces}
+
+%"Avoid deep nests"
 
 %Definition environment?
 
 We formally represent a state space search problem via a \kw{state space}. A \kw{state space} is a tuple $$\calS=\langle S,A,\mathrm{cost},T,s_I,S_G\rangle,$$ with $S$ the finite set of states, $A$ the finite set of actions, $\mathrm{cost}:A\ar\bbN_0$ the \kw{action costs}, $T\subseteq S\times A\times S$ the \kw{transition relation}, $s_I\in S$ the \kw{initial state}, and $S_G\subseteq S$ the \kw{goal states}.
 
-Note that we include action costs in our definition primarily to enable us to discuss the \kw{path cost} $g$, which is the sum of all action costs along a path from the initial state to the subject state. Unless stated otherwise, assume all action costs are $1$.
+%"semantics + relation to formal planning"
+
+Note that we include action costs in our definition primarily to enable us to discuss
+
+%"too meta"
+
+the \kw{path cost} $g$, which is the sum of all action costs along a path from the initial state to the subject state. Unless stated otherwise, assume all action costs are $1$.
 
 % explain open list?
 
@@ -27,9 +49,17 @@ Note that we include action costs in our definition primarily to enable us to di
 
 \section{Heuristic Search}
 
-A state space search algorithm that can differentiate between states only in regards to their path costs and whether or not they are goal states is sometimes called an \kw{uninformed} or \kw{blind search algorithm}.
+A state space search algorithm that can differentiate between states only in regards to their path costs and whether or not they are goal states
 
-As a state space grows past a trivial size, the number of ``wrong'' paths that such blind algorithms will explore before finding a solution can grow rapidly. \kw{Informed} or \kw{heuristic search algorithms} are a family of search algorithms that try to avoid exploring bad or dead-end paths by prioritizing states which are closer to a goal state. This approximate distance to a goal state is quantified by a \kw{heuristic value}, provided by a \kw{heuristic}.
+%technically incorrect
+
+is sometimes called an \kw{uninformed} or \kw{blind search algorithm}.
+
+As a state space grows past a trivial size, the number of ``wrong''
+
+%undefined term
+
+paths that such blind algorithms will explore before finding a solution can grow rapidly. \kw{Informed} or \kw{heuristic search algorithms} are a family of search algorithms that try to avoid exploring bad or dead-end paths by prioritizing states which are closer to a goal state. This approximate distance to a goal state is quantified by a \kw{heuristic value}, provided by a \kw{heuristic}.
 
 \subsection{Heuristic}
 
@@ -45,9 +75,15 @@ A \kw{heuristic} $h:S\ar\bbN_0\cup\{\infty\}$ maps a state $s$ to the approximat
 
 \kw{Greedy best-first search}[GBFS] is the immediate product of introducing heuristics: among the actions applicable for a given current state, this search algorithm always selects the action leading to the successor state with the smallest heuristic value.
 
+%need BsFS first
+
 GBFS is an especially good fit for \kw{satisficing problems}, where path cost is irrelevant as long as a solution is found: its combination of ignoring path cost and stubbornly following the heuristic tends to yield a solution quickly. However, this overreliance on the heuristic also makes GBFS vulnerable.
 
-An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. The presence of UHRs can severely worsen GBFS' performance: once the algorithm is trapped in a UHR, it is forced to search the entire region exhaustively or until it manages to escape back to an informed region.
+An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal.
+
+%heuristic always estimates, so this statement makes no sense
+
+The presence of UHRs can severely worsen GBFS' performance: once the algorithm is trapped in a UHR, it is forced to search the entire region exhaustively or until it manages to escape back to an informed region.
 
 % An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. We name two kinds of UHRs.
 % "A crater is defined as the set of all states s' reachable from a crater entry s along a path on which for any s'', h(s'') lss level(s)."
@@ -61,27 +97,41 @@ An \kw{uninformed heuristic region}[UHR] is a region of a state space where the 
 
 \kw{Stochastic exploration} is one method that can mitigate the issue of GBFS getting stuck in UHRs. Here, instead of always stubbornly following the heuristic, we introduce a mechanism that allows the algorithm to occasionally ignore the advice of the heuristic and instead select a successor stochastically.
 
-%'The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving directly towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal to the goal states). The most immediate control available to us for tuning this balance is the frequency of exploratory expansions compared to regular exploitative ones.
+%'The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving \sout{directly} towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal [we want this, but we cannot ensure this] to the goal states). The most immediate control available to us for tuning this balance is the frequency of exploratory expansions compared to regular exploitative ones.
 
 %I'm leaving this unfinished for now: if we are able to test different balancing configurations here, I envision using some kind of ratio to talk about them. For example, an exploration-to-exploitation ratio of 1/1=1 corresponds to traditional alternating queues. For the time being, something simpler:
 
 The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving directly towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal to the goal states). One simple mechanism used to achieve this balance is an \kw{alternating open list}, which alternates between returning the open state with the lowest heuristic value (like in regular GBFS) and returning a random open state.
 
+%"exploring orthogonal" needs ref and explanation
+
 \subsection{$\epsilon$-GBFS}
 
-\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but this is not guaranteed. Consider an instance of GBFS trapped sufficiently deep in a UHR for its open list to be dominated by states within that same region: in such a situation, when sampling the open list directly, the probability of selecting a state that will allow us to ``escape'' the UHR is vastly smaller than the probability of selecting one of the intra-UHR states. As such, $\epsilon$-GBFS effectively behaves like blind search in precisely the situation it aims to avoid.
+%cite
+
+\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but this is not guaranteed. Consider an instance of GBFS trapped sufficiently deep
+
+%vague
+
+in a UHR for its open list to be dominated by states within that same region: in such a situation, when sampling the open list directly, the probability of selecting a state that will allow us to ``escape'' the UHR is vastly smaller than the probability of selecting one of the intra-UHR states. As such, $\epsilon$-GBFS effectively behaves like blind search in precisely the situation it aims to avoid.
 
 % \kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but becomes less effective as GBFS becomes more and more trapped in a UHR, because the open list will be dominated by states within that region.
 
 \subsection{Type-Based Stochastic Exploration}
 
+%cite
+
 \kw{Type-based stochastic exploration} is an evolution of $\epsilon$-GBFS that attempts to address its problems. Here, instead of sampling directly from the open list, we instead first partition the open states into a set of \kw{types} according to some common characteristics. These ``common characteristics'' are formalized by a \kw{type system}.
+
+%needs formalization
 
 Successor selection then consists of first selecting a type, followed by selecting a state from that type. Given an appropriate type system, this eliminates biases awarded to overrepresented types of states, making exploratory expansions more effective. Type-based stochastic exploration also introduces two new controls for us to tune in an attempt to improve the balance between exploitation and exploration, those being the sampling strategy used to select a type, and the sampling strategy used to select a state from that type.
 
 %There's more to say here regarding those two controls, but I don't know yet what we'll do with them, so I'm leaving it for now.
 
 A good type system is fundamental to the effectiveness of type-based stochastic exploration. One established type system is the \kw{$\langle h,g\rangle$ type system}, which buckets those states together that have the same heuristic value $h$ and path cost $g$.
+
+%needs formal details
 
 %Is there more to say here regarding $\langle h,g\rangle$?
 
@@ -102,9 +152,15 @@ A good type system is fundamental to the effectiveness of type-based stochastic 
 
 Consider GBFS traversing along some path to a goal state, and imagine a body of water whose water level rises and falls along with the heuristic values encountered by GBFS during the traversal. Once the goal state is reached, the walls of this body of water show a transition from wet to dry at a height corresponding to the maximum heuristic value encountered by GBFS along the way: this is the \kw{high-water mark} for this path.
 
-To complete our definition of the \kw{high-water mark}: first, for a given starting state $s$, there might be multiple different paths leading to a solution. We will define the \kw{high-water mark} for the set of solution paths from $s$, $P(s)$, as the lowest \kw{high-water mark} among the individual paths. Second, not every starting state leads to a solution: in this case, the \kw{high-water mark} is infinite.
+To complete our definition of the \kw{high-water mark}: first, for a given starting state $s$, there might be multiple different paths leading to a solution. We will define the \kw{high-water mark} for the set of solution paths from $s$, $P(s)$, as the lowest \kw{high-water mark}
+
+%"recursive def"
+
+among the individual paths. Second, not every starting state leads to a solution: in this case, the \kw{high-water mark} is infinite.
 
 Thus, formally, the \kw{high-water mark} for a starting state $s$ under heuristic $h$ is $$\Hw_h(s)\ceq\begin{cases}\min_{p\in P(s)}(\max_{s'\in p}h(s')), & \text{if } P(s)\neq\emptyset; \\ \infty, & \text{otherwise}.\end{cases}$$
+
+%P(s) not defined
 
 % check reference definition
 
@@ -112,19 +168,31 @@ Thus, formally, the \kw{high-water mark} for a starting state $s$ under heuristi
 
 % $\Hw_h(S)\ceq\min_{s\in S}\Hw_h(s)$
 
-Since the high-water mark cannot rise, a transition leading to a new lowest high-water mark along a path can be thought of achieving a new ``benchmark''. Using this perspective, we can see that the high-water mark separates the search space into ``benches'' of progress.
+Since the high-water mark cannot rise,
 
-In pursuit of a formal definition of this observation, consider first that states that sit at the ``edge'' of these transitions, i.e. states that have a successor with a new lowest high-water mark, are called \kw{progress states}. We also say these states \kw{make progress}. Then, for any state $s$,
+%"in what direction?"
+
+a transition leading to a new lowest high-water mark along a path can be thought of achieving a new ``benchmark''. Using this perspective, we can see that the high-water mark separates the search space into ``benches'' of progress.
+
+In pursuit of a formal definition of this observation, consider first that states that sit at the ``edge'' of these transitions,
+
+%def
+
+i.e. states that have a successor with a new lowest high-water mark, are called \kw{progress states}
+
+%def
+
+. We also say these states \kw{make progress}. Then, for any state $s$,
 
 \begin{enumerate}
-    \item the \kw{bench level} of $s$ is the lowest high-water mark among the successors of $s$;
-    \item the \kw{inner states} of $s$ are all states $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$, but which are \emph{not} progress states; and
+    \item the \kw{bench level} of $s$ [B(s)?] is the lowest high-water mark among the successors of $s$;
+    \item the \kw{inner states} of $s$ are all states $s'\neq s$ reachable [NEEDS DEF] from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$, but which are \emph{not} progress states; and
     \item the \kw{exit states} of $s$ are all states $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$ but which \emph{are} progress states.
 \end{enumerate}
 
 The \kw{bench} of $s$ is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ the inner states of $s$ and $E$ the exit states of $s$. Note that we use $I(\calB(s))$ and $E(\calB(s))$ to refer to the inner and exit states of $\calB(s)$.
 
-Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space \calS and heuristic $h$. $\Bts(\calS,h)$ is a directed graph $\langle V,E\rangle$ that is constructed as follows:
+Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space \calS and heuristic $h$. $\Bts(\calS,h)$ is a directed graph $\langle V,E\rangle$ that is constructed [DEFINED INDUCTIVELY] as follows:
 
 \begin{enumerate}
     \item $\calB(s_I)\in V$.
