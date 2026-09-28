@@ -1,216 +1,219 @@
 \chapter{Background}
 
+%Comments referring to Fast Downward should include a version number.
+
+\section{Automated Planning}
+
 \kw{Automated planning} is a branch of Artificial Intelligence research concerned with automated problem-solving. Given some formal representation of an environment, the objective is to find a sequence of actions which transforms the environment from some initial configuration to some desired end configuration.
 
-An environment is described via a finite set of properties such that every configuration of the environment is represented by some assignment of values to these properties. We call these properties the \kw{state variables} $V$, with a non-empty, finite set of possible values $\mathrm{dom}(v)$ for each $v\in V$. A configuration of the environment is called a \kw{state}, which is a total assignment of $V$ according to $\mathrm{dom}$.
+\section{Planning Tasks}
 
-\section{Planning Task}
+To reason about an automated planning problem, we want a formal representation of the environment in which the problem exists. One way to achieve this is by describing the environment via a finite set of ``properties'', such that every configuration of the environment is represented by some assignment of values to these properties.
 
-A \kw{planning task} is a tuple $$\Pi=\langle V,\mathrm{dom},I,G,A\rangle,$$ where $V$ is the finite set of \kw{state variables}, $\mathrm{dom}(v)$ is the finite and non-empty set of possible values for $v\in V$, $I$ is the \kw{initial state}, $G$ is the set of \kw{goals}, and $A$ is the finite set of \kw{actions}.
+%Example?
 
-A planning task is a formal representation of some environment, and a \kw{state variable} represents a property of this environment. A \kw{state} is a total assignment of the state variables, and represents one configuration of the environment. More formally: a state $s$ is a set $$s=\{\langle v,x_v\rangle\mid v\in V\},$$ where $x_v\in\mathrm{dom}(v)$ for each $v\in V$.
+Let \kw{state variable} refer to such a property of the environment, and let $V$ refer to the finite set of all state variables used to model an environment, with each $v\in V$ having a finite, non-empty \kw{domain} $\Dom(v)$ of possible values.
 
-An \kw{action} describes a change in the configuration of the environment: each action $a\in A$ is associated with a partial assignment of $V$, called the \kw{preconditions}, and another partial assignment of $V$, $\mathrm{eff}(a)$, called the \kw{effects}. Formally: for any action $a$, $$\mathrm{pre}(a)=\{\langle v,x_v\rangle\mid v\in V_\text{pre,a}\},$$ with $V_\text{pre,a}\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_\text{pre,a}$, and $$\mathrm{eff}(a)=\{\langle v,x_v\rangle\mid v\in V_\text{eff,a}\},$$ with $V_\text{eff,a}\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_\text{eff,a}$. An action $a$ is considered \kw{applicable} at a given state $s$ if $s\supseteq\mathrm{pre}(a)$, and \kw{applying} $a$ at $s$ produces a new state $$s'=(s\setminus\{\langle v,x\rangle\mid\langle v,x'\rangle\in\mathrm{eff}(a)\})\cup\mathrm{eff}(a),$$ that is, for each state variable occurring in the effects, its previous assignment is replaced by the new assignment specified in the effects, while all other assignments remain unchanged.
+Let \kw{partial assignment} refer to a function $l$ defined on some $\Vars(l)\subseteq V$, with $l(v)\in\Dom(v)$ for all $v\in\Vars(l)$; let \kw{state} refer to a partial assignment $s$ with $\Vars(s)=V$. We say a state $s$ \kw{satisfies} a partial assignment $l$ if $s(v)=l(v)$ for all $v\in\Vars(l)$.
 
-The set of \kw{goals} $G$ describes the properties of the desired end configuration(s) of the environment. A \kw{goal} $g$ is a set $$g=\{\langle v,x_v\rangle\mid v\in V_g\},$$ with $V_g\subseteq V$ and $x_v\in\mathrm{dom}(v)$ for each $v\in V_g$. When $s\supseteq g$, we say $s$ \kw{satisfies} $g$, and we call $s$ a \kw{goal state} if $s$ satisfies at least one $g\in G$.
+Let \kw{action} refer to a tuple $o=\langle\Pre_o,\Eff_o\rangle$ of partial assignments, with $\Pre_o$ the \kw{preconditions} of $o$ and $\Eff_o$ the \kw{effects} of $o$.
+
+Then a \kw{planning task} is a tuple $$\Pi=\langle V,\Dom,I,G,A\rangle,$$ with $I$ a state called the \kw{initial state}, $G$ a set of partial assignments called the \kw{goals}, and $A$ a finite set of \kw{actions}.
+
+An action $o$ is \kw{applicable} in a state $s$ if $s$ satisfies $\Pre_o$. \kw{Applying} an applicable action $o$ in a state $s$ produces the state $s[o]$ with $$s[o](v)=\begin{cases}\Eff_o(v)&\text{if $v\in\Vars(\Eff_o)$,}\\s(v)&\text{otherwise,}\end{cases}$$ for all $v\in V$.
+
+% needs to define: planning task, state variable, states, action, actions, preconditions, effects, goal, goals, applicable action, applying an action (and what that results in)
+
+\section{State Spaces}
+\label{sec:sss}
+
+While planning tasks allow us to represent an automated search problem in a compact manner, it can be easier in some cases to use a representation that places more emphasis on states rather than actions.
+
+Consider a planning task $\Pi=\langle V,\Dom,I,G,A\rangle$.
+
+The \kw{state space induced by $\Pi$}, $\calS(\Pi)$, is a tuple $\langle S,\Succ,s_I,S_G\rangle$ with components defined as follows:
+
+\begin{itemize}
+    \item the finite\footnote{$V$ is finite and $\Dom(v)$ is finite for all $v\in V$. Thus $|S|=\prod_{v\in V}|\Dom(v)|$.} set of \kw{states} $S$ is the set of all possible states: $$S=\{s\mid s\text{ is a state}\};$$
+    \item the \kw{successor generator function} $\Succ:S\ar\calP(S)$, with $\calP$ denoting the power set, gives all \kw{successors} of a state, that is, for a state $s\in S$, $\Succ(s)$ contains all states that can be produced by applying some applicable action $o\in A$ in $s$: $$\Succ(s)=\{s[o]\mid o\in A, o\text{ applicable in }s\};$$
+    \item the \kw{initial state} $s_I$ is $I$;
+    \item the set of \kw{goal states} $S_G$ is the set of states that satisfy every $g\in G$; we call such a state a \kw{goal state}: $$S_G=\{s\in S\mid s\text{ is a goal state}\}.$$
+\end{itemize}
+
+Some additional definitions are helpful.
+
+A \kw{path} from $s_1\in S$ to $s_n\in S$ is a tuple $\pi=\langle s_1,\ldots,s_n\rangle$, with $n\geq 1$, where $s_{i+1}\in\Succ(s_i)$ for all $1\leq i<n$, and which we say has \kw{length} $|\pi|=n-1$. The set of \kw{paths} from $s_1\in S$ to $s_n\in S$ is $P(s_1,s_n)=\{\pi\mid \pi$ is a path from $s_1$ to $s_n\}$. We say a state $s'$ is \kw{reachable} from $s$ if there exists some path from $s$ to $s'$.
+
+A \kw{partial solution} from $s\in S$ is a path $\phi$ from $s$ to any goal state $s_G\in S_G$. The set of \kw{partial solutions} from $s\in S$ is $\Phi(s)=\{\phi\mid\phi$ is a partial solution from $s\}$. A \kw{solution} is a partial solution from $s_I$.
+
+The \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\phi\in\Phi(s)}|\phi|$, with $h^*(s)=\infty$ if $\Phi(s)=\emptyset$.
+
+% needs to define state, states, successors, initial state, goal state, goal states, path, path cost, reachable, solution, GOAL DIST
 
 \section{State Space Search}
 
-\kw{State space search} is one technique used to solve a subset of these planning problems. Consider an environment that is deterministic and static (meaning it changes predictably and only when the agent\footnote{\textit{The agent} is a single abstract entity executing the actions in an environment. This work only concerns itself with single-agent scenarios, but it should be noted that this restriction does not apply to the whole of automated planning.} executes an action) and is fully observable and representable via a set of discrete variables.
+A \kw{state space search algorithm} (or simply \kw{search algorithm}) is an algorithm that explores a given state space in search of a solution. A \kw{semi-complete} search algorithm is a search algorithm that is guaranteed to find a solution if one exists. A \kw{complete} search algorithm is a semi-complete search algorithm that is guaranteed to terminate if no solution exists.
 
-% Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and the search simply consists of repeatedly applying such actions until the current state matches a goal state.
-Under these assumptions, we can accurately model every unique \kw{state} (including the initial and goal states) of the environment as a ``snapshot'' of the values of these variables. An \kw{action}, then, induces a transition from one state to another, and a search proceeds as follows: first, add the initial state to a collection of discovered states (called \kw{open list}). Then, until a goal state is found, remove some state from the open list, consider it the new current state, and extend the open list by adding to it all the newly reachable states.
+Another property commonly used to classify search algorithms is \kw{optimality}: a search algorithm is considered \kw{optimal} if it always finds a solution with minimal path length among all solutions. In this work, optimality does not concern us\footnote{Not directly, at least: we primarily aim for a small runtime, and while a solution of any path length is satisfactory, long solution paths might take longer to find.}: we are simply concerned with finding any solution at all, which is sometimes called \kw{satisficing search}.
 
-%"Good as a high-level description but needs formal background."
+A search algorithm requires a mechanism that can track which states the algorithm has encountered but not yet explored, and which can tell the algorithm which state to explore next. Going forward, we will refer to such constructs as \kw{open lists}.
 
-\subsection{State Spaces}
+An \kw{open list} $O$ is a container to which we can add a state $s$ via $O.\Add(s)$, from which we can remove (and receive) an arbitrary state using $O.\Remove()$, and for which we can check whether it is empty via $O.\Empty()$. We may also use $s\in O$ to refer to any state $s$ contained in open list $O$.
 
-%"Avoid deep nests"
+A generic skeleton for a complete\footnote{Completeness follows from the finiteness of $S$ and the use of the \textit{closed} set.} state space search algorithm is given in \cref{alg:sss}.
 
-%Definition environment?
+\begin{algorithm}[H]
+    \caption{State space search}
+    \label{alg:sss}
+    \begin{algorithmic}[1]
+        \Require A state space $\calS=\langle S,\Succ,s_I,S_G\rangle$.
+        \Ensure A solution if one exists, otherwise \textbf{unsolvable}.
+        \State \var{open} \ceq \New open list
+        \State \var{closed} \ceq \{\}
+        \State \var{open}.add($s_I$)
+        \While{\Not \var{open}.empty()}
+        \State $s$ \ceq \var{open}.remove()
+        \If{$s$ $\notin$ \var{closed}}
+        \State \var{closed} \ceq \var{closed} $\cup$ \{$s$\}
+        \If{$s\in S_G$}
+        \State \Return path from $s_I$ to $s$
+        \EndIf
+        \ForAll{$s'\in\Succ(s)$}
+        \State \var{open}.add($s'$)
+        \EndFor
+        \EndIf
+        \EndWhile
+        \State \Return \textbf{unsolvable}
+    \end{algorithmic}
+\end{algorithm}
 
-We formally represent a state space search problem via a \kw{state space}. A \kw{state space} is a tuple $$\calS=\langle S,A,\mathrm{cost},T,s_I,S_G\rangle,$$ with $S$ the finite set of states, $A$ the finite set of actions, $\mathrm{cost}:A\ar\bbN_0$ the \kw{action costs}, $T\subseteq S\times A\times S$ the \kw{transition relation}, $s_I\in S$ the \kw{initial state}, and $S_G\subseteq S$ the \kw{goal states}.
+%I should point out that this algorithm is technically not able to construct the solution path at the end. Also note that I removed ``dead-end pruning'' for clarity.
 
-%"semantics + relation to formal planning"
+\section{Random Search}
 
-Note that we include action costs in our definition primarily to enable us to discuss
+Let \kw{unbiased open list} refer to any open list $O$ where $O.\Remove()$ removes a state selected uniformly at random. Then a \kw{random search} algorithm is a state space search algorithm that uses an unbiased open list.
 
-%"too meta"
+% Random search algorithms remove states from the open list indiscriminantly. As a state space grows past a trivial size, the number of states that such a blind algorithm might consider grows rapidly, quickly rendering this approach impractical.
 
-the \kw{path cost} $g$, which is the sum of all action costs along a path from the initial state to the subject state. Unless stated otherwise, assume all action costs are $1$.
+\section{Best-First Search}
+%Maybe I just combine this with GBFS, since I don't need this definition anywhere else?
 
-% explain open list?
+For a state space $\calS=\langle S,\Succ,s_I,S_G\rangle$, let \kw{evaluation function} refer to a function $$f:S\ar\bbN_0\cup\{\infty\}$$ that assigns each state $s\in S$ an integer\footnote{Here we are following the conventions of Fast Downward.} value $f(s)$. Let \kw{sorted open list, sorted by evaluation function $f$} refer to an open list $O$ where $$O.\Remove()={\arg\min}_{s\in O}f(s).$$ If $f$ is minimal for more than one state, which of those states is removed is left as an implementation detail\footnote{Fast Downward breaks ties by preferring shorter path lengths.}. Then a \kw{best-first search} algorithm using evaluation function $f$ is a state space search algorithm that uses a sorted open list sorted by $f$.
 
-% set of all $s$-plans (path to goal from $s$) $P(s)$
+Best-first search makes successor selection deliberate by introducing a mechanism that allows us to prioritize some states over others.
 
-% paths between $s$ and $s'$ $P(s,s')$
+%Regarding Fast Downward's tie-breaking behavior: from what I recall, at least. Will check.
 
-% \quoted{$s\in\calS$} means $s\in S$
-
-\section{Heuristic Search}
-
-A state space search algorithm that can differentiate between states only in regards to their path costs and whether or not they are goal states
-
-%technically incorrect
-
-is sometimes called an \kw{uninformed} or \kw{blind search algorithm}.
-
-As a state space grows past a trivial size, the number of ``wrong''
-
-%undefined term
-
-paths that such blind algorithms will explore before finding a solution can grow rapidly. \kw{Informed} or \kw{heuristic search algorithms} are a family of search algorithms that try to avoid exploring bad or dead-end paths by prioritizing states which are closer to a goal state. This approximate distance to a goal state is quantified by a \kw{heuristic value}, provided by a \kw{heuristic}.
-
-\subsection{Heuristic}
-
-A \kw{heuristic} $h:S\ar\bbN_0\cup\{\infty\}$ maps a state $s$ to the approximate distance from $s$ to the nearest goal state.
-
-%We use natural numbers here instead of reals to match Fast Downward.
-
-% $h(S)=\min_{s\in S}h(s)$
-
-% state space topology $\calT=\langle\calS,h\rangle$
+%Needs polishing.
 
 \section{Greedy Best-First Search}
+\label{sec:gbfs}
 
-\kw{Greedy best-first search}[GBFS] is the immediate product of introducing heuristics: among the actions applicable for a given current state, this search algorithm always selects the action leading to the successor state with the smallest heuristic value.
+Consider for a moment a scenario where you are in your car, with the goal of reaching some city, and without prior knowledge of the area and without access to a map. If your behavior resembled that of a random search, your strategy to reach the city would be taking random turns until you end up at the destination by chance (or because you drove down every possible road). Of course, this is not a particularly good strategy.
 
-%need BsFS first
+Luckily, there is a better way: people that have explored this area before have installed markers indicating roughly how far away you are from the city. Naturally, if you prioritize turns such that the distance indicated on the markers goes down, you will likely reach your destination much faster.
 
-GBFS is an especially good fit for \kw{satisficing problems}, where path cost is irrelevant as long as a solution is found: its combination of ignoring path cost and stubbornly following the heuristic tends to yield a solution quickly. However, this overreliance on the heuristic also makes GBFS vulnerable.
+This analogy illustrates the idea of a \kw{heuristic}: for a state space $\calS=\langle S,\Succ,s_I,S_G\rangle$, a \kw{heuristic} is a function $$h:S\ar\bbN_0\cup\{\infty\}$$ that maps each state $s\in S$ to an estimate of its goal distance $h(s)$.
 
-An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal.
+A \kw{greedy best-first search}[GBFS] algorithm is a best-first search algorithm using the evaluation function $h$.
 
-%heuristic always estimates, so this statement makes no sense
+%Needs polishing.
 
-The presence of UHRs can severely worsen GBFS' performance: once the algorithm is trapped in a UHR, it is forced to search the entire region exhaustively or until it manages to escape back to an informed region.
+\section{High-Water Mark}
 
-% An \kw{uninformed heuristic region}[UHR] is a region of a state space where the heuristic fails to accurately estimate the true distance to a goal. We name two kinds of UHRs.
-% "A crater is defined as the set of all states s' reachable from a crater entry s along a path on which for any s'', h(s'') lss level(s)."
-% "a plateau is a subset of states on the same bench that all have the same heuristic value"
+Consider, for a moment, this thought experiment: say you are observing GBFS traversing a single path from some starting state to a goal state, and imagine a pool of water whose water level rises and falls relative to the heuristic value of the state which GBFS is currently at. Now consider that, as GBFS arrives at the goal state with the pool fully drained, the walls of the pool show a transition from wet to dry at a height corresponding to the maximum heuristic value encountered by GBFS along the path.
 
-% Once GBFS enters a UHR, its greedyness will trap it in the region until it has either searched all of it or manages to find a way out. In this case, it can be beneficial to occasionally ignore the advice of the heuristic and instead take a random transition. This is called \kw{stochastic exploration}.
+We call this maximum heuristic value the \kw{high-water mark} for this path: for a state space $\calS=\langle S,\Succ,s_I,S_G\rangle$ and a heuristic $h$, the \kw{high-water mark} of $h$ is a function $\Hw_h:\{\pi\mid\pi\text{ is a partial solution from any }s\in S\}\ar\bbN_0\cup\{\infty\}$ such that $$\Hw_h(\pi)=\max_{s'\in\pi}h(s'),$$ or informally, the high-water mark represents how high $h$ must climb before arriving at the goal state.
 
-%needs citation
-
-\section{Stochastic Exploration}
-
-\kw{Stochastic exploration} is one method that can mitigate the issue of GBFS getting stuck in UHRs. Here, instead of always stubbornly following the heuristic, we introduce a mechanism that allows the algorithm to occasionally ignore the advice of the heuristic and instead select a successor stochastically.
-
-%'The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving \sout{directly} towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal [we want this, but we cannot ensure this] to the goal states). The most immediate control available to us for tuning this balance is the frequency of exploratory expansions compared to regular exploitative ones.
-
-%I'm leaving this unfinished for now: if we are able to test different balancing configurations here, I envision using some kind of ratio to talk about them. For example, an exploration-to-exploitation ratio of 1/1=1 corresponds to traditional alternating queues. For the time being, something simpler:
-
-The success of stochastic exploration hinges on finding the right balance of \kw{exploitation} (moving directly towards a goal state) and \kw{exploration} (widening the pool of considered paths by exploring orthogonal to the goal states). One simple mechanism used to achieve this balance is an \kw{alternating open list}, which alternates between returning the open state with the lowest heuristic value (like in regular GBFS) and returning a random open state.
-
-%"exploring orthogonal" needs ref and explanation
-
-\subsection{$\epsilon$-GBFS}
-
-%cite
-
-\kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but this is not guaranteed. Consider an instance of GBFS trapped sufficiently deep
-
-%vague
-
-in a UHR for its open list to be dominated by states within that same region: in such a situation, when sampling the open list directly, the probability of selecting a state that will allow us to ``escape'' the UHR is vastly smaller than the probability of selecting one of the intra-UHR states. As such, $\epsilon$-GBFS effectively behaves like blind search in precisely the situation it aims to avoid.
-
-% \kw{$\epsilon$-GBFS} selects random successors directly from the open list. This works if the candidates are sufficiently diverse, but becomes less effective as GBFS becomes more and more trapped in a UHR, because the open list will be dominated by states within that region.
-
-\subsection{Type-Based Stochastic Exploration}
-
-%cite
-
-\kw{Type-based stochastic exploration} is an evolution of $\epsilon$-GBFS that attempts to address its problems. Here, instead of sampling directly from the open list, we instead first partition the open states into a set of \kw{types} according to some common characteristics. These ``common characteristics'' are formalized by a \kw{type system}.
-
-%needs formalization
-
-Successor selection then consists of first selecting a type, followed by selecting a state from that type. Given an appropriate type system, this eliminates biases awarded to overrepresented types of states, making exploratory expansions more effective. Type-based stochastic exploration also introduces two new controls for us to tune in an attempt to improve the balance between exploitation and exploration, those being the sampling strategy used to select a type, and the sampling strategy used to select a state from that type.
-
-%There's more to say here regarding those two controls, but I don't know yet what we'll do with them, so I'm leaving it for now.
-
-A good type system is fundamental to the effectiveness of type-based stochastic exploration. One established type system is the \kw{$\langle h,g\rangle$ type system}, which buckets those states together that have the same heuristic value $h$ and path cost $g$.
-
-%needs formal details
-
-%Is there more to say here regarding $\langle h,g\rangle$?
-
-% \kw{Type-GBFS} attempts to eliminate this bias: it uses a \kw{type system} to bucket states by shared characteristics. Random successors are then selected by first selecting such a bucket, called \kw{type}, followed by selecting the actual successor from within the chosen type.
-% The performance of Type-GBFS depends on which type system is used, or in other words, which characteristics are used to bucket states.
-
-% \subsubsection{$\langle h,g\rangle$ Type System}
-% The \kw{$\langle h,g\rangle$ type system} buckets those states together that have the same heuristic value $h$ and \kw{path cost} $g$. The \kw{path cost} is the sum of the costs of all the transitions taken by GBFS to arrive at the current state.
-% %we otherwise ignore transition costs, so maybe we will be able to omit this. will see later. also, this definition of path cost is a bit awkward, because g is not given for a state but rather for a node in the search tree, which hasn't really been introduced at this point
-% \subsubsection{Biased Type Selection}
-% \kw{Biased type selection} builds on the $\langle h,g\rangle$ type system: here, we first use some function $f$ to select $h$ with a bias towards lower values. Next, we select some $\langle h,g\rangle$ bucket with matching $h$ uniformly at random. Finally, we select some successor from the chosen bucket, again uniformly at random.
-% \subsubsection{Softmin-Type}
-% \kw{Softmin-type} is a concrete form of biased type selection that uses $f\ceq\op{softmin}$.
-% %missing definition of softmin
-% %notes about probabilistic completeness
+Recall that the set of partial solutions from any $s\in S$ is $\Phi(s)$. We define the high-water mark for an individual state $s$ such that $$\Hw_h(s)=\begin{cases}\min_{\pi\in\Phi(s)}\Hw_h(\pi)&\text{if }\Phi(s)\neq\emptyset,\\\infty&\text{otherwise,}\end{cases}$$ that is, the high-water mark for an individual state $s$ is the smallest high-water mark along any path from $s$ to a goal state.
 
 \section{Bench Transition System}
 
-Consider GBFS traversing along some path to a goal state, and imagine a body of water whose water level rises and falls along with the heuristic values encountered by GBFS during the traversal. Once the goal state is reached, the walls of this body of water show a transition from wet to dry at a height corresponding to the maximum heuristic value encountered by GBFS along the way: this is the \kw{high-water mark} for this path.
+Let $\calS$ refer to some state space $\langle S,\Succ,s_I,S_G\rangle$ and let $h$ refer to some heuristic.
 
-To complete our definition of the \kw{high-water mark}: first, for a given starting state $s$, there might be multiple different paths leading to a solution. We will define the \kw{high-water mark} for the set of solution paths from $s$, $P(s)$, as the lowest \kw{high-water mark}
+Consider what the high-water mark of some state $s$ tells us about GBFS' behavior, assuming $s$ is the state in the open list with the smallest heuristic value: since a high-water mark of $\Hw_h(s)$ guarantees that there exists a partial solution along which $h$ will never climb above $\Hw_h(s)$, we can be sure that GBFS will never expand a state $s'$ with $h(s')>\Hw_h(s)$, since there will always be a state $s''$ with $h(s'')\leq\Hw_h(s)$ in the open list, which GBFS will prefer because $h(s'')<h(s')$. This insight naturally leads to a notion of ``heuristic progress'' for GBFS: we say a state $s$ is a \kw{progress state} if $\Hw_h(s')<\Hw_h(s)$ for at least one $s'\in\Succ(s)$.
 
-%"recursive def"
+%I'm not sure about the above claim about GBFS' behavior. At the least, I should see if I can word things differently.
 
-among the individual paths. Second, not every starting state leads to a solution: in this case, the \kw{high-water mark} is infinite.
+Let \kw{level} refer to a function $\Level:S\ar\bbN_0\cup\{\infty\}$ such that $$\Level(s)=\begin{cases}\min_{s'\in\Succ(s)}\Hw_h(s')&\text{if }\Succ(s)\neq\emptyset,\\\infty&\text{otherwise,}\end{cases}$$ for any $s\in S$. Next, for any $s_\text{root}\in S$, let $\calI$ refer to the set of states $s_\text{inner}\neq s_\text{root}$ for which there exists a path $\pi=\langle s_\text{root},\ldots,s_\text{inner}\rangle$ where for all $s_\pi\in\pi,s_\pi\neq s_\text{root}$, $h(s_\pi)\leq\Level(s_\text{root})$ and $s_\pi$ is not a progress state. Less formally, think of $\calI$ as all non-progress states reachable from, but not including, $s_\text{root}$, whose heuristic value does not exceed the level. Then, for that same $s_\text{root}$, let $E$ refer to the set of states $s_\text{exit}$ where every $s_\text{exit}$ is a progress state with $h(s_\text{exit})\leq\Level(s_\text{root})$ and that is a successor of $s_\text{root}$ or any $s_\text{inner}\in\calI$. Less formally, think of $E$ as all progress states reachable from, but not including, $s_\text{root}$, whose heuristic value does not exceed the level.
 
-Thus, formally, the \kw{high-water mark} for a starting state $s$ under heuristic $h$ is $$\Hw_h(s)\ceq\begin{cases}\min_{p\in P(s)}(\max_{s'\in p}h(s')), & \text{if } P(s)\neq\emptyset; \\ \infty, & \text{otherwise}.\end{cases}$$
-
-%P(s) not defined
-
-% check reference definition
-
-% $\Hw_h(s)\geq h(s)$ (when is this used?)
-
-% $\Hw_h(S)\ceq\min_{s\in S}\Hw_h(s)$
-
-Since the high-water mark cannot rise,
-
-%"in what direction?"
-
-a transition leading to a new lowest high-water mark along a path can be thought of achieving a new ``benchmark''. Using this perspective, we can see that the high-water mark separates the search space into ``benches'' of progress.
-
-In pursuit of a formal definition of this observation, consider first that states that sit at the ``edge'' of these transitions,
-
-%def
-
-i.e. states that have a successor with a new lowest high-water mark, are called \kw{progress states}
-
-%def
-
-. We also say these states \kw{make progress}. Then, for any state $s$,
-
+The \kw{bench} for $s_\text{root}$, $\calB(s_\text{root})$, is then a tuple $\langle\calI,E\rangle$ with $\calI$ the \kw{inner states} and $E$ the \kw{exit states}. We may use $\calI(\calB(s_\text{root}))$ and $E(\calB(s_\text{root}))$ to refer the inner and exit states of $\calB(s_\text{root})$, respectively. Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space $\calS=\langle S,\Succ,s_I,S_G\rangle$ and heuristic $h$: $\Bts(\calS,h)$ is a directed graph $\langle \calV,\calE\rangle$ that is defined inductively as follows:
 \begin{enumerate}
-    \item the \kw{bench level} of $s$ [B(s)?] is the lowest high-water mark among the successors of $s$;
-    \item the \kw{inner states} of $s$ are all states $s'\neq s$ reachable [NEEDS DEF] from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$, but which are \emph{not} progress states; and
-    \item the \kw{exit states} of $s$ are all states $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level of $s$ but which \emph{are} progress states.
+    \item $\calB(s_I)\in\calV$.
+    \item For any $s\in S$, if $\calB(s)\in\calV$, $s'\in\calE(\calB(s))$ and $s'\notin S_G$, then $\calB(s')\in\calV$ and $\langle\calB(s),\calB(s')\rangle\in\calE$.
 \end{enumerate}
 
-The \kw{bench} of $s$ is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ the inner states of $s$ and $E$ the exit states of $s$. Note that we use $I(\calB(s))$ and $E(\calB(s))$ to refer to the inner and exit states of $\calB(s)$.
+%Could use some more intuition maybe. Also, it's unclear what exactly $s'\in\calE(\calB(s))$ means.
 
-Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space \calS and heuristic $h$. $\Bts(\calS,h)$ is a directed graph $\langle V,E\rangle$ that is constructed [DEFINED INDUCTIVELY] as follows:
+\section{Uninformed Heuristic Regions}
+\label{sec:uhr}
 
-\begin{enumerate}
-    \item $\calB(s_I)\in V$.
-    \item If $\calB(s)\in V$ and $s'\in E(\calB(s))$ and $s'\notin S_G$, then $\calB(s')\in V$ and $\langle\calB(s),\calB(s')\rangle\in E$.
-\end{enumerate}
+All heuristics (short of the \kw{perfect heuristic}, which is a mostly theoretical heuristic that always gives the true goal distance) are inherently inaccurate: nonetheless, having an estimate of the goal distance, even if not entirely accurate, is still vastly better than searching blindly in most situations. Note, however, that we said \textit{most} situations.
 
-A bench transition system can be thought of as an ``evolutionary'' tree, where ``evolving'' means making progress. 
+Consider a similar scenario as in \cref{sec:gbfs}, but this time, you ask a route planning service for directions to the city. The service provides you with two options: route A, which it estimates will take around five minutes, and route B, which it estimates will take around ten minutes. You do not care particularly much about this five-minute difference, but in the absence of a reason that speaks against taking the shorter route, you select route A. After twenty minutes of following route A, you are still not at your destination. You check the route planning service, and it now estimates you will arrive in four minutes. Driven by your deep trust in this route planning service, you keep following route A. Another twenty minutes pass without you reaching the city, and then another twenty minutes, until you finally reach the destination after an hour of driving.
 
-%I want to find a better way of tying this section into the background. Also, the end is a bit abrupt.
+Two things happened here: first, the estimate given by the route planning service was wildly inaccurate, prompting the driver to pick route A, which ended up taking much, much longer than route B would have taken (assuming the estimate of ten minutes for route B was reasonably accurate). If we take this route planning service to represent a heuristic function, this describes the concept of an \kw{uninformed heuristic region}[UHR], which is a region in a state space where the heuristic provides severely misleading estimates of the goal distance.
 
-% "set of episodes"
+But the route planning service (ergo, the heuristic) is not the sole reason the driver ended up taking an hour to reach their destination. Any person caught in this scenario would have likely stopped trusting the estimate for route A after a while and would have pivoted to a different strategy. This is the second idea this analogy aims to illustrate: GBFS' tendency to stubbornly trust the heuristic can trap the algorithm in UHRs. To be clear: the driver (ergo, GBFS) eventually arrived at the destination regardless; but what if the destination had been an important meeting, set to begin half an hour before the driver reached the city (think a strict limit for how long a search is allowed to run before being terminated)?
 
-% Let $s$ be some state, and consider the lowest high-water mark among its successors, $\Hw_h(\Succ(s))$, its \kw{bench level}.
-% Any state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level, but which is \emph{not} a progress state, can be considered part of a \quoted{bench} induced by $s$. We call these states the \kw{inner states}.
-% Naturally, a state $s'\neq s$ reachable from $s$ where $h(s')$ is smaller than or equal to the bench level but which \emph{is} a progress state can thus be considered at the \quoted{edge} of the aforementioned \quoted{bench}. These states are called the \kw{exit states}.
-% Combining the two: for any state $s$, its \kw{bench} is a tuple $\calB(s)=\langle I,E\rangle$, with $I$ being the inner states and $E$ the exit states.
+%This section lacks formal definitions for UHRs. I don't know yet what to do here. Think plateaus and craters. Maybe it's easier to talk about these things if I can use the BTS to define them?
 
-% check reference definition
+\section{Stochastic Exploration}
 
-% (bench) $\Level(s)=\Hw_h(\Succ(s))$
-% the bench level for a bench induced by s is the high-water mark of its successors because every bench except for the one induced by the initial state is induced by an exit state of a previous bench, which itself still sat at the bench level of that previous bench. note that this means the initial state is never candidate of any bench. also, recall that our GBFS does not reopen states, so cycles are no concern.
+Keeping with the analogy outlined in \cref{sec:uhr}, we can start thinking about ways in which a person might ``escape'' route A. One very simple idea is that the driver could simply decide to ignore the route and instead take a random turn\footnote{It should be noted that this analogy only vaguely mirrors how an actual search algorithm would explore such an environment. Most importantly, a search algorithm, unlike our driver, has no notion of being ``at'' a single position: instead we tend to talk of a ``frontier'', which can be pictured like an endless army of ants exploring a maze, with one ant able to take one step for every step of the algorithm. The important consequence of this is that the ``random turn'' our driver is taking can be any unexplored turn along the entire route they have so far driven.}, hoping that this will lead them to a location where the route planning service provides more helpful estimates.
+
+This act of ``taking a random turn'' is done in pursuit of \kw{exploration}, that is, selecting states that might not immediately lead to a smaller goal distance, but which may broaden the pool of states available for us to consider in subsequent steps. Exploration ideally acts to enable more effective \kw{exploitation}, that is, selecting the most ``promising'' states, i.e. those states we deem to be closest to a goal state.
+
+\kw{Stochastic exploration}, then, is the term we use to refer to this idea of ``occasionally taking a random turn'' we described above. More precisely, a GBFS algorithm that performs stochastic exploration occasionally ignores the advice of the heuristic in favor of selecting a random state. Note that the terms ``occasionally'' and ``random'' are deliberately left vague here, since different ways of adding stochastic exploration to GBFS work differently in this regard: we will be more precise when discussing concrete applications of stochastic exploration.
+
+Stochastic exploration has been shown to be a useful way to allow GBFS to ``escape'' UHRs.
+
+%Needs citation.
+
+When we speak of \kw{escaping} a UHR, we mean finding a state $s$ outside the UHR such that future exploitation will prefer $s$ over states within the UHR.
+ 
+\section{$\epsilon$-GBFS}
+
+Let $\calS$ be some state space $\langle S,\Succ,s_I,S_G\rangle$.
+
+An \kw{open list selector function} is a function $q:\{O_1,\ldots,O_n\}\ar\{1,\ldots,n\}$, with $O_i$ an open list for all $1\leq i\leq n$: the nature of how a queue selector function decides which result to produce will be specified when such a function is instantiated.
+
+%This definition makes $q$ look like a pure function, which it isn't.
+
+A \kw{multi-queue open list} $O$ with open lists $\calO=\{O_1,\ldots,O_n\}$ and open list selector function $q$ is an open list where, for any state $s\in S$, $O.\Add(s)$ implies $O_i.\Add(s)$ for all $1\leq i\leq n$, $O.\Remove()$ implies $O_{q(\calO)}.\Remove()$, and $O.\Empty()$ is true if and only if $O_i.\Empty()$ is true for all $i$.
+
+An \kw{$\epsilon$ open list} with open lists $\calO=\{O_1,O_2\}$ and \kw{probability} $\epsilon\in(0,1)$ is a multi-queue open list with open lists $\calO$ and an open list selector function $q$ such that $$q(\calO)=\begin{cases}1\text{ with probability $\epsilon$,}\\2\text{ otherwise.}\end{cases}$$
+
+Then a \kw{$\epsilon$-GBFS} algorithm is a state space search algorithm that uses an $\epsilon$ open list with open lists $O_1,O_2$, where $O_1$ is an unbiased open list and $O_2$ is an open list sorted by some heuristic $h$.
+
+%Needs citation.
+
+\section{Type-GBFS}
+
+Consider a situation where $\epsilon$-GBFS' open list is dominated by states within a UHR. Our scenario from \cref{sec:uhr} can work to illustrate how this might happen: if the start of route B is one state in the open list, and we say route A adds new states to the open list, each still in the same UHR as route A, for every crossing the driver passes, then it is easy to see that the longer the driver stays on route A, the more the open list fills with states in the UHR, while the number of states outside it remains at just one.
+
+Since the unbiased open list, which $\epsilon$-GBFS' uses for exploration, selects states uniformly at random, that selection will be heavily biased towards states still within the UHR, making it hard for the algorithm to escape the region. One way to mitigate this is by considering ``similar'' states as part of the same ``group'', and then first selecting a group before finally selecting a state from that selected group.
+
+A \kw{type system} dictates the rules by which the states in an open list are disjointly partitioned into \kw{types}, where a \kw{type} is a subset of the states in the open list. A \kw{type selection strategy} dictates how a type is selected for a subsequent removal of a state. A \kw{state selection strategy} dictates how a state is selected for removal, given a previously selected type.
+
+A \kw{type-based open list} following type system $\bbT$, type selection strategy $\cdot^t$, and state selection strategy $\cdot_s$, is an open list whose states are disjointly partitioned into types according to $\bbT$, and where $O.\Remove()$ first selects a type according to $\cdot^t$, and then selects and removes a state from that type according to $\cdot_s$.
+
+An \kw{alternating open list} $O$ with open lists $\calO=\{O_1,O_2\}$ is a multi-queue open list with open lists $\calO$ and an open list selector function $q$ such that $$q(\calO)=\begin{cases}1\text{ if }i\;\%\;2=0,\\2\text{ otherwise,}\end{cases}$$ where $i$ is the total number of completed invocations of $O.\Remove()$ since the instantiation of $O$, and $\%$ is the modulo operator\footnote{For any $n\in\bbN_0,m\in\bbN_1$, $n\;\%\;m$ is the remainder of the integer division $n\div m$.}.
+
+Finally, a \kw{Type-GBFS} algorithm using type-based open list $O_1$ is a state space search algorithm using an alternating open list with open lists $O_1,O_2$, where $O_2$ is an open list sorted by some heuristic $h$.
+
+\section{The HG Type System}
+
+The \kw{HG type system} is a type system that considers those states $s$ part of the same type which have the same heuristic value $h$ and for which the path from $s_I$ to $s$ along which they were encountered has the same length.
+
+%I'm aware that this definition of what is essentially just the path cost $g$ is awkward. A more natural definition would require talking about search nodes, which I've so far omitted because they're not particularly relevant for us otherwise. Still, I should revisit this.
+
+The \kw{$\cdot^U$ type selection strategy} is a type selection strategy that selects types uniformly at random. The \kw{$\cdot_U$ state selection strategy} is a state selection strategy that selects states uniformly at random. This gives us our first concrete variant of Type-GBFS: the \kw{HG$^U_U$} algorithm is the Type-GBFS algorithm using a type-based open list following the HG type system, the $\cdot^U$ type selection strategy, and the $\cdot_U$ state selection strategy. We will use notation like this to refer to future variants of Type-GBFS as well: going forward, TS$^\text{TSS}_\text{SSS}$ shall refer to Type-GBFS using a type-based open list following some type system TS, some type selection strategy TSS, and some state selection strategy SSS.
+
+Recall the beginning of \cref{sec:uhr}, where we propositioned that, in most situations, following the heuristic is still preferable to ignoring it completely. Following that logic, we might want a type-based open list that places a bit more weight on states with smaller heuristic values, in such a way that those states are generally more likely to be selected, but that still allows for occasional selections that go entirely against the advice of the heuristic.
+
+We will first generalize this idea to be able to describe a type selection strategy that can use any value, not just a heuristic value, to determine the ``weight'' of a type. We first introduce the idea of a \kw{type property}: a \kw{type property} is a function $\delta:\calT\ar\bbN_0\cup\{\infty\}$ defined for all types $\calT$ induced by some type system. A \kw{biased type selection strategy} biased by type property $\delta$ is a type selection strategy that selects a type from among the \kw{qualifying types} uniformly at random, where the \kw{qualifying types} are all those types $T$ in the open list with $\delta(T)=b$, and $b$ is chosen from the set $B$ of all distinct $\delta(T)$ with the probability of choosing each $b'\in B$ given by $$\Softmin(b')=\frac{\exp(-b'/\tau)}{\sum_{b''\in B}\exp(-b''/\tau)},$$ with $\tau>0$.
+
+The \kw{min-h type property} is a type property where, for any type $T$ induced by some type system, $\text{min-h}(T)=\min_{s\in T}h(s)$, with $h$ the heuristic. Finally, the \kw{H type selection strategy} is the biased type selection strategy biased by the min-h type property. This finally allows us to describe the HG$^H_U$ algorithm, which puts into practice this idea of still listening to the heuristic in some capacity during exploration instead of ignoring it completely like HG$^U_U$ does.
+
+%It is never explicitly explained how a state ends up associated with a specific path. This is a bit tricky because our state space search algorithm does not use nodes. I'd prefer to keep it that way, but that means I need to find a way to clear this up.
