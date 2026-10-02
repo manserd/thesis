@@ -203,3 +203,17 @@ Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for
     \item $\calB(s_I)\in\calV$.
     \item For any $s\in S$, if $\calB(s)\in\calV$, $s'\in E(\calB(s))$ and $s'\notin S_G$, then $\calB(s')\in\calV$ and $\langle\calB(s),\calB(s')\rangle\in\calE$.
 \end{enumerate}
+
+\section{Craters and Plateaus}
+\label{sec:cp}
+
+The BTS allows us to provide formal definitions for certain kinds of UHRs.
+
+First, a \kw{crater} is a region in a state space where the heuristic values along the paths in the region fall below some shared level. Formally, given a state space $\calS$ and heuristic $h$ with $\Bts(\calS,h)=\langle\calV,\calE\rangle$, and a state $s$ with $\calB(s)\in\calV$, we call a state $s'\in\calI(\calB(s))$ a \kw{crater entry state} if $h(s')=\Level(s)$ and if there exists some $s''\in\Succ(s')$ with $h(s'')<\Level(s)$. A \kw{crater} then spans all states that are reachable from a crater entry state $s_\text{entry}$ along a path $\pi$ with $s_\pi\in\calI(\calB(s))$ and $h(s_\pi)<\Level(s)$ for all $s_\pi\in\pi$ except $s_\text{entry}$.
+
+Similarly, a \kw{plateau} is a region in a state space where the heuristic values along the paths in the region remain exactly at the level of the bench they lie in. Reusing the bindings from above, a \kw{plateau} spans a set of states $S_\text{plateau}\subseteq\calI(\calB(s))$ with $h(s_\text{plateau})=\Level(s)$ for all $s_\text{plateau}\in S_\text{plateau}$, and where for any two states $s',s''\in S_\text{plateau}$, there exists a path $\pi$ from $s'$ to $s''$ or from $s''$ to $s'$ such that $s_\pi\in S_\text{plateau}$ for every $s_\pi\in\pi$.
+
+Realize that, since these UHRs are defined as regions within a bench, we know that any single one of these regions is captured fully by a single bench within a BTS. This insight will become important shortly.
+
+%This is pretty much a copy of Tomasz.
+%More.
