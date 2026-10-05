@@ -1,125 +1,36 @@
 \chapter{Implementation}
 
-%A lot of details here aren't fully figured out: there are inconsistencies with how methods are invoked and where data is stored/coming from (e.g. Strategy::add requires the parent state, but there's no explicit mechanism for how it would access that information). Some of this can probably be left a bit vague, but currently I feel like it's too vague.
+For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1 (henceforth just Fast Downward). The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \cref{alg:sss}.
 
-This chapter introduces algorithms that apply the learnings from the previous chapters.
+\section{Open List}
+\label{sec:impl-ol}
 
-\section{Generic Search}
+The HI and LW type systems have different architectural requirements when compared to the HG type systems. In particular, the two new type systems are \kw{path-dependent}, in that the type of a given state depends on that state's parent's type. The existing implementation of a type-based open list in Fast Downward was not designed with path-dependent type systems in mind. It also does not allow for biased selection.
 
-We start by introducing an algorithm for generic state space search.
+While the first issue can be worked around within the constraints of the existing implementation, the second one cannot. Therefore, we opted to forego the existing type-based open list and build a new one from scratch. In this, we also decided to extend Fast Downward's generic open list interface by adding a way for a search algorithm to inform its open list that a new expansion was about to begin. This was done so path-dependent type systems could easily track the parent state for subsequent insertions.
 
-\begin{algorithm}
-    \caption{Generic search}
-    \label{alg:generic}
-    \begin{algorithmic}[1]
-        \State \var{open} \ceq \New OpenStateProvider
-        \State \var{s} \ceq the initial state
-        \If{$s$ is not a dead end}
-        \State \var{open}.add($s$)
-        \EndIf
-        \State \var{closed} \ceq \New set of states
-        \While{\var{open} can provide a state}
-        \State $s$ \ceq \var{open}.get\_next\_state()
-        \If{$s$ $\notin$ \var{closed}}
-        \State \var{closed}.add($s$)
-        \If{$s$ is a goal state}
-        \State \Return \textbf{solution}
-        \EndIf
-        \ForAll{successor $s'$ of $s$}
-        \If{$s'$ is not a dead end}
-        \State \var{open}.add($s'$)
-        \EndIf
-        \EndFor
-        \EndIf
-        \EndWhile
-        \State \Return \textbf{unsolvable}
-    \end{algorithmic}
-\end{algorithm}
+\section{Buckets}
 
-\Cref{alg:generic} is intentionally abstract and omits details that are irrelevant for our work. Notably, this algorithm works directly with \emph{states} rather than some notion of \kw{search nodes}: this is fine for explaining our mechanisms here, because our algorithms maintain a set of \kw{closed} states, meaning one state can never be reachable on more than one path during a single search. We also do not differentiate between the ideas of \kw{lazy} and \kw{eager} search: in a real implementation using search nodes, a \kw{lazy} algorithm delays the generation of successor \kw{nodes} (a construct that holds a state and a parent node) until they are actually explored, while an \kw{eager} one generates them immediately. This, again, is not important here, since we ignore the concept of search nodes altogether, but know that we model our algorithms with \kw{eager} search in mind.
+Since each combination of type selection strategy and state selection strategy has different requirements in terms of the data structures, we decided the create bespoke implementations for each combination. The basic idea is always the same: a bucket is a set of states, and the open list maintains a set of buckets. Buckets are created when they are needed, and deleted as soon as they are empty. Below we outline some non-trivial aspects of the implementation that apply to all or some of the combinations.
 
-The core idea we intend to introduce with this representation is that of the \kw{OpenStateProvider}. This is a conceptual construct that mimics the behavior of an \kw{open list}, with the difference that, unlike a regular open list, the strategy it uses to select a state during \texttt{get\_next\_state} can change between calls. Importantly, \kw{OpenStateProvider} maintains separate lists of open states for each strategy: this means that it is possible for two calls to \texttt{get\_next\_state} to return the same state. This is not a problem, because we explicitly check for previously closed states, but it does have some consequences, which we will briefly mention in the next section.
+Both within a single bucket, and across all buckets maintained by an open list, a reocurring pattern is the need for a data structure that allows constant-time insertion, lookup, and random removal of items. This is achieved by pairing a C++ \texttt{std::vector} with a \texttt{std::unordered\textunderscore map}. The former holds the actual items (or sometimes pointers to items) and enables constant-time insertion (via \texttt{push\textunderscore back}) and constant-time random removal (by generating a random index into the vector, and then removing the item at that position using typical swap-and-pop). The latter maps an item key to the item's position within the vector, to enable constant-time lookup.
 
-We now introduce a specialization of generic search.
+Biased selection strategies impose two additional requirements: first, we need to be able to sample the set of all distinct bias values that are present across the items. And second, having selected a bias value, we must be able to perform uniform random selection among the items which have that selected bias value.
 
-\section{Alternating Search}
+We addressed this as follows: first, we added another \texttt{std::unordered\textunderscore map}, called \texttt{group\textunderscore by\textunderscore bias}, that maps each distinct bias value to a \texttt{std::vector} that contains the positions of all items with that bias value. This is used both for selecting a bias value (detailed below) and for uniform random removal of an item with a given bias (using swap-and-pop at a random index as described above).
 
-\kw{Alternating search} is one instance of generic search that declares \var{OpenListProvider} as follows:
+Biased selection works as follows (recall $\Softmin$ from \cref{sec:hg}): let $B$ refer to the set of distinct bias values, let $\beta=\min_{b'\in B}b'$, let $w=\sum_{b'\in B}\Softmin(b'-\beta)$, and let $x\in[0,w)$ randomly generated. Now let $i$ refer to a one-based index into $B$ (for this, assume $B$ has some fixed order), and initialize $i\ceq 1$. Then, for each $b'\in B$: if $x<\Softmin(b'-\beta)$, stop; otherwise, let $x\ceq x-w$, $i\ceq i+1$, and repeat. Finally, with $b$ the bias value at index $i$ in $B$, select some item uniformly at random from the vector that $b$ maps to in \texttt{group\textunderscore by\textunderscore bias}. We use $b'-\beta$ to avoid numerical problems with large $b'$.
 
-\begin{algorithmic}[1]
-    \State \var{open} \ceq \New OpenStateProvider alternating between strategies $A$ and $B$
-\end{algorithmic}
+Note that changing the bias of an item (which can happen in the \Htss type selection strategy, where the bucket bias is given by the min-h type property) requires us to find and remove the item position in the vector that \texttt{group\textunderscore by\textunderscore bias} points to for the stale bias. To avoid this walk, we additionally store alongside each item its position within its current \texttt{group\textunderscore by\textunderscore bias} vector.
 
-This algorithm changes how it selects states for every search step. Note that, as a consequence of \kw{OpenStateProvider} maintaining separate open lists per strategy, this does not guarantee that both strategies get applied an equal number of times: if strategy~$A$ returns some state~$s$ (thus closing it), if strategy~$B$ then selects that same state during \emph{its} turn, it essentially forfeits its turn and control remains with strategy~$A$.
+\section{Type Systems}
 
-%Not directly related to the text, but a general thought: currently, we only support a 50/50 balance between exploitation and exploration, mainly because of how we use FD's alternating queue. It would be interesting to balance these differently to see how that affects the results (once we get to that stage).
+The type system is notified when a new expansion begins (recall \cref{sec:impl-ol}) and returns a ``type key'', which uniquely identifies one type, for any state that is inserted into the open list. As with the buckets, we created bespoke implementations for each type system. The most straight-forward implementation is that of the HG type system, which simply returns the same type key for any states with the same heuristic value and path cost.
 
-\section{Type-Based Strategy}
+The HI and LW type systems are slightly more involved. Both type systems first check if the state $s$ they receive has no parent state. If this is the case, it must be that $s=s_I$, and so a new type $T_\text{root}$ is created with $\TypeDepth(T_\text{root})=0$.
 
-We now introduce a model for a type-based open state provider strategy: here, the open list is partitioned into \kw{buckets}, and state selection implies randomly selecting a state from a randomly selected bucket.
+Otherwise, let $T$ refer to the parent state's type. To find this type, both type systems maintain a \texttt{std::unordered\textunderscore map} that maps each previously encountered state to its type.
 
-%"randomly" here is obviously too vague. I need to word this differently, because we will also be using different sampling techniques (not just uniform).
+If $s$ does have a parent state, the type systems check for progress: if $s$ has made progress compared to its parent state, $s$ is assigned the corresponding new type (a single shared type in the case of HI, and the type that corresponds to the low-water mark value of $s$ in the case of LW). If such a type $T'$ does not exist yet, it is created here, making sure the type depth is increased by one relative to $T$. For both type systems, the keys that point to these ``new'' types are cleared when a new expansion begins, to ensure subsequent improving states are not added to the same types as previous improving states.
 
-%This model is confusing at the moment, because it uses the same interface as OpenStateProvider, making it seem as if they're the same thing. What I'm trying to model is this: OpenStateProvider::add() selects a strategy, and then calls that strategy's add() (which is what is shown here). To communicate that effectively, I need to change something here.
-
-\begin{algorithmic}[1]
-    \Function{new}{ }
-        \State \textbf{this}.\var{buckets} \ceq \New set of buckets
-    \EndFunction
-    \Function{add}{parent,s}
-        \State \var{parent\_type} \ceq type of \var{parent} according to TypeEvaluator
-        \State \var{s\_type} \ceq type of \var{s} according to TypeEvaluator
-        \If{\var{parent\_type} = \var{s\_type}}
-            \State add $s$ to the bucket for type \var{parent\_type} in \textbf{this}.\var{buckets}
-        \Else:
-            \If{there is no bucket for type \var{s\_type} in \textbf{this}.\var{buckets}}
-                \State create the bucket
-            \EndIf
-            \State add $s$ to the bucket
-        \EndIf
-    \EndFunction
-    \Function{get\textunderscore next\textunderscore state}{ }
-        \State \var{bucket} \ceq some random bucket from \textbf{this}.\var{buckets}
-        \State $s'$ \ceq some random state from \var{bucket}
-        \State delete \var{bucket} if it is empty
-        \State \Return $s'$
-    \EndFunction
-\end{algorithmic}
-
-This model introduces the notion of a \kw{TypeEvaluator} as the mechanism by which type-based strategies assign types to states. By defining the some concrete instances of this evaluator, we can finally model our full algorithm.
-
-\section{Heuristic Improvement-Based Strategy}
-
-The following models a heuristic improvement-based TypeEvaluator.
-
-\begin{algorithmic}[1]
-    \Function{determine\_type}{\var{parent}, $s$}
-        \If{$\mathrm{h}(s)<\mathrm{h}(\var{parent})$}
-            \If{some earlier sibling of $s$ induced a new type $t$}
-                \State \Return type identifier for $t$
-            \Else
-                \State \Return \New type identifier
-            \EndIf
-        \Else:
-            \State \Return type identifier of \var{parent}
-        \EndIf
-    \EndFunction
-\end{algorithmic}
-
-\section{Low-Water Mark-Based Strategy}
-
-The following models a low-water mark-based TypeEvaluator.
-
-\begin{algorithmic}[1]
-    \Function{determine\_type}{\var{parent}, $s$}
-        \If{$\mathrm{lw}(s)<\mathrm{lw}(\var{parent})$}
-            \If{some earlier sibling $s'$ of $s$ induced a new type $t$ \textbf{and} $\mathrm{lw}(s)=\mathrm{lw}(s')$}
-                \State \Return type identifier for $t$
-            \Else
-                \State \Return \New type identifier
-            \EndIf
-        \Else:
-            \State \Return type identifier of \var{parent}
-        \EndIf
-    \EndFunction
-\end{algorithmic}
+Lastly, if neither of the previous two cases applied, $s$ must be a non-improving type. As such, it is assigned its parent state's type, $T$.

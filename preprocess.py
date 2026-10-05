@@ -29,7 +29,7 @@ PARTS = {
         '1-intro',
         '2-background',
         '3-theory',
-        # '4-impl',
+        '4-impl',
         # '5-res'
     ]
 }
