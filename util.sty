@@ -94,3 +94,37 @@
 \DeclareMathOperator{\Hits}{HITS}
 \DeclareMathOperator{\Lots}{LOTS}
 \DeclareMathOperator{\Sts}{STS}
+\DeclareMathOperator{\TypeDepth}{type-depth}
+
+\NewDocumentCommand{\Tss}{m}{$\cdot^\text{#1}$\xspace}
+\NewDocumentCommand{\Utss}{}{\Tss{U}}
+\NewDocumentCommand{\Htss}{}{\Tss{H}}
+\NewDocumentCommand{\Dtss}{}{\Tss{D}}
+\NewDocumentCommand{\Sss}{m}{$\cdot_\text{#1}$\xspace}
+\NewDocumentCommand{\Usss}{}{\Sss{U}}
+\NewDocumentCommand{\Hsss}{}{\Sss{H}}
+\NewDocumentCommand{\TypeGBFSVariant}{m m m}{#1$^\text{#2}_\text{#3}$\xspace}
+\NewDocumentCommand{\hgUu}{}{\TypeGBFSVariant{HG}{U}{U}}
+\NewDocumentCommand{\hgHu}{}{\TypeGBFSVariant{HG}{H}{U}}
+\NewDocumentCommand{\hiUu}{}{\TypeGBFSVariant{HI}{U}{U}}
+\NewDocumentCommand{\hiUh}{}{\TypeGBFSVariant{HI}{U}{H}}
+\NewDocumentCommand{\hiHu}{}{\TypeGBFSVariant{HI}{H}{U}}
+\NewDocumentCommand{\hiHh}{}{\TypeGBFSVariant{HI}{H}{H}}
+\NewDocumentCommand{\hiDu}{}{\TypeGBFSVariant{HI}{D}{U}}
+\NewDocumentCommand{\hiDh}{}{\TypeGBFSVariant{HI}{D}{H}}
+\NewDocumentCommand{\lwUu}{}{\TypeGBFSVariant{LW}{U}{U}}
+\NewDocumentCommand{\lwUh}{}{\TypeGBFSVariant{LW}{U}{H}}
+\NewDocumentCommand{\lwHu}{}{\TypeGBFSVariant{LW}{H}{U}}
+\NewDocumentCommand{\lwHh}{}{\TypeGBFSVariant{LW}{H}{H}}
+\NewDocumentCommand{\lwDu}{}{\TypeGBFSVariant{LW}{D}{U}}
+\NewDocumentCommand{\lwDh}{}{\TypeGBFSVariant{LW}{D}{H}}
+
+\newif\ifDRAFT
+% \DRAFTtrue
+\ifDRAFT
+\NewDocumentCommand{\pcite}{m O{{\color{red}Where?}}}{\citep{#1} [#2]}
+\NewDocumentCommand{\tcite}{m O{{\color{red}Where?}}}{\citet{#1} [#2]}
+\else
+\NewDocumentCommand{\pcite}{m O{}}{\citep{#1}}
+\NewDocumentCommand{\tcite}{m O{}}{\citet{#1}}
+\fi

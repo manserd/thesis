@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+content = Path('content')
 build = Path('build')
 build.mkdir(exist_ok=True)
 
@@ -20,13 +21,24 @@ def sub(m):
     return f'\\comment{{{'\\\\'.join(stmts)}}}\n'
 
 
-for f in Path('content').glob('*.tex'):
-    f_ = build / f.name
+PARTS = {
+    'front': [
+        # '0-front'
+    ],
+    'center': [
+        '1-intro',
+        '2-background',
+        '3-theory',
+        # '4-impl',
+        # '5-res'
+    ]
+}
 
-    # preprocess only changed files
-    if True or not f_.is_file() or f.stat().st_mtime > f_.stat().st_mtime:
-        text = f.read_text(encoding='utf-8')
-
+for key in PARTS:
+    processed = []
+    for name in PARTS[key]:
+        source = content / f'{name}.tex'
+        text = source.read_text(encoding='utf-8')
         text = re.sub(r'(?:^%[^ ].+$\n?)+', sub, text, flags=re.MULTILINE)
-
-        f_.write_text(text)
+        processed.append(text)
+    (build / f'_{key}.tex').write_text('\n'.join(processed), encoding='utf-8')
