@@ -1,1 +1,188 @@
-\chapter{Results}
+\chapter{Evaluation}
+
+In this chapter we outline the experiments we ran to evaluate the HI and LW type systems and we discuss our results. As benchmarks we used satisficing problems from the \kw{International Planning Competition}[IPC], which we retrieved from the Fast Downward benchmarks repository\footnote{\url{https://github.com/aibasel/downward-benchmarks}}. Specifically, we worked with two suites: the \kw{reference suite} uses all the same domains that \tcite{tomasz2024} used in their small experiments, except that their suite only accumulates to 376 problems, while ours covers 380.
+
+Our \kw{large suite} ???.
+
+All experiments were run an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU with a 3584MiB memory limit and a 10 minute time limit per problem. Unless specified otherwise, all algorithms used the \kw{FF} heuristic \pcite{hoffmann2001}, unit costs, and the default $\Softmin$ temperature of $\tau=1$. For stochastic algorithms, all results represent averages over five runs.
+
+% single cores?
+
+\section{Replication}
+
+Our first experiment aimed to replicate the results that \tcite{tomasz2024} observed using the reference suite. This was done to establish that our implementation is correct and that it performs similarly enough to theirs for results to be comparable across both works.
+
+There are a few caveats to this experiment: first, as mentioned before, \tcite{tomasz2024} measured coverage across four fewer problems than we did. Assume therefore that our numbers are slightly higher than theirs by default. Second, coverage can be affected by hardware differences and noise: we tried to keep both these factors as small as we could, but some difference will remain. And third, all stochastic algorithms inherently behave differently depending on the configuration of the random number generator, which we were unable to match between their experiment and ours: we tried to minimize the uncertainty by averaging our results across multiple runs, but here too, some difference will remain.
+
+With these caveats in mind, \Cref{tab:replication} shows the results of this experiment: the coverage numbers are consistently close enough for us to consider it reasonable to attribute the differences to the aforementioned caveats. Also note the numbers in parentheses to the right of every coverage number: these indicate the ``ranking'' of each result for those algorithms where the coverage is available for both implementations: while there are some differences here, too, the rankings agree across both implementations regarding the best and worst entries.
+
+\begin{table}[h]
+    \centering
+    \caption{A comparison between coverages achieved with our implementation (``Ours'') and the coverages given by \tcite{tomasz2024} (``Theirs'').}
+    \label{tab:replication}
+    \begin{tabular}{crlrlr}
+\textbf{Algorithm}&\textbf{Ours}&&\textbf{Theirs}&&\textbf{Difference}
+\\\hline
+\gbfs&$199.0$&(12)&$198.0$&(12)&$+1$
+\\\hgUu&$215.2$&(9)&$224.2$&(9)&$-9.0$
+\\\hgHu&$261.8$&
+\\\hiUu&$199.4$&(11)&$206.4$&(10)&$-7.0$
+\\\hiUh&$201.8$&
+\\\hiHu&$273.2$&(4)&$255.6$&(7)&$+17.6$
+\\\hiHh&$281.2$&(3)&$263.4$&(4)&$+17.8$
+\\\hiDu&$296.2$&(1)&$295.0$&(1)&$+1.2$
+\\\hiDh&$287.8$&(2)&$284.2$&(2)&$+3.6$
+\\\lwUu&$207.6$&(10)&$204.2$&(11)&$+3.4$
+\\\lwUh&$199.8$&
+\\\lwHu&$261.2$&(7)&$256.4$&(6)&$+4.8$
+\\\lwHh&$269.0$&(5)&$254.4$&(8)&$+14.6$
+\\\lwDu&$258.8$&(8)&$258.6$&(5)&$+0.2$
+\\\lwDh&$268.4$&(6)&$263.6$&(3)&$+4.8$
+    \end{tabular}
+\end{table}
+
+\section{Bucket Selection Temperature}
+
+Recall that $\Softmin$ has a temperature parameter $\tau>0$. In this second experiment, we used different $\Softmin$ temperatures during bucket selection. Since testing all configurations with different temperatures on all problems would have lead to an excessive runtime for this experiment, we separated it into two stages.
+
+\subsection{First Stage}
+
+In the first stage, we only used a subset of the reference suite: we omitted the domain \texttt{childsnack-sat14-strips}, which consistently had zero coverage in the first experiment, and we also omitted all the following domains which consistently had full or nearly full coverage:
+
+\begin{tabular}{lll}
+    \texttt{ged-sat14-strips}&\texttt{hiking-sat14-strips}&\texttt{parcprinter-sat11-strips}
+    \\\texttt{pegsol-sat11-strips}&\texttt{scanalyzer-sat11-strips}&\texttt{sokoban-sat11-strips}
+\end{tabular}
+
+ This reduces the number of problems in the suite to 240. When comparing coverage numbers from this experiment to other experiments, we assume that all of these domains would have shown the same coverage here as they did with $\tau=1$ (in the first experiment).
+ 
+ We also only tested a subset of the algorithms: namely, we excluded all variants that use the \Utss type selection strategy, since this strategy does not use $\Softmin$, and we only included variants that use the \Usss state selection strategy. The latter assumes that the type and state selection strategies affect an algorithm's performance independently of each other: we have no reason to assume this to be true and thus acknowledge this as a potential gap in our methodology.
+
+%tricky assumption here
+
+\Cref{tab:bt1sum} and \Cref{bt1benchmarks} show the results of this first stage. In the case of \hgHu, we recorded higher coverage at elevated temperatures, whereas for \lwHu and \lwDu, the coverage is slightly higher at lower temperatures. For \hiHu and \hiDu, we did not observe any significantly better results at non-default temperatures.
+
+\subsection{Second Stage}
+
+The goal of the second stage was to evaluate the most promising algorithms of the first stage on the full reference suite and with temperatures that reached further into the directions that appeared promising in the first stage. Since, in the first stage, \lwHu and \lwDu achieved higher coverage at reduced temperatures, we additionally tested these variants at even lower temperatures in this stage. Also, because this stage omitted the HI variants and tested fewer different temperatures overall, we were now also able to evaluate the \Hsss variants of LW.
+
+As \hgHu only showed an improvement at $\tau=2$ and not beyond, and since there are no other state selection strategies for this algorithm, our only goal for this variant was to see if its coverage on the full reference suite reflected the predicted reference suite coverage from the first stage.
+
+The results of the second stage are shown in \Cref{tab:bt2sum} and \Cref{tab:bt2benchmarks}. Three observations: first, the coverages of the domains that we omitted in the first stage are shown here matching their coverages at the default temperature. We can therefore reasonably assume that those variants that we have tested on the reduced reference suite in the first stage would likely produce coverage numbers similar to those we predicted in \Cref{tab:bt1sum} when evaluated on the full reference suite.
+
+two: sss no difference
+
+three: no increased benefits in extremes
+
+\begin{table}[ht]
+    \centering
+
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \begin{tabular}[t]{clr}
+            \textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
+            \\\hline
+            \hgHu&$10$&$261.2$
+            \\&$5$&$267.4$
+            \\&$2$&$271.0$
+            \\&$\mathit{1}$&$\mathit{261.8}$
+            \\&$0.5$&$247.8$
+            \\&$0.25$&$236.2$
+            \\\hline
+            \hiHu&$10$&$263.4$
+            \\&$5$&$270.4$
+            \\&$2$&$272.4$
+            \\&$\mathit{1}$&$\mathit{273.2}$
+            \\&$0.5$&$270.0$
+            \\&$0.25$&$268.4$
+            \\\hline
+            \hiDu&$10$&$270.6$
+            \\&$5$&$284.6$
+            \\&$2$&$298.4$
+            \\&$\mathit{1}$&$\mathit{296.2}$
+            \\&$0.5$&$298.8$
+            \\&$0.25$&$298.6$
+            \\\hline
+            \lwHu&$10$&$249.2$
+            \\&$5$&$255.2$
+            \\&$2$&$262.6$
+            \\&$\mathit{1}$&$\mathit{261.2}$
+            \\&$0.5$&$267.2$
+            \\&$0.25$&$263.4$
+            \\\hline
+            \lwDu&$10$&$249.0$
+            \\&$5$&$254.2$
+            \\&$2$&$263.8$
+            \\&$\mathit{1}$&$\mathit{258.8}$
+            \\&$0.5$&$265.0$
+            \\&$0.25$&$268.2$
+        \end{tabular}
+        \captionof{table}{Coverage of a selection of algorithms under different type selection temperatures $\tau$. Italic }
+        \label{tab:bt1sum}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \begin{tabular}[t]{rrr}
+            \textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
+            \\\hline
+            \hgHu&$2$&$271.4$
+            \\&$\mathit{1}$&$\mathit{261.8}$
+            \\\hline
+            \lwHu&$\mathit{1}$&$\mathit{261.2}$
+            \\&$0.5$&$262.4$
+            \\&$0.25$&$258.6$
+            \\&$0.125$&$256.6$
+            \\&$0.0625$&$257.0$
+            \\\hline
+            \lwHh&$\mathit{1}$&$\mathit{269.9}$
+            \\&$0.5$&$267.8$
+            \\&$0.25$&$265.4$
+            \\&$0.125$&$266.4$
+            \\&$0.0625$&$263.4$
+            \\\hline
+            \lwDu&$\mathit{1}$&$\mathit{258.8}$
+            \\&$0.5$&$261.6$
+            \\&$0.25$&$263.6$
+            \\&$0.125$&$261.6$
+            \\&$0.0625$&$263.0$
+            \\\hline
+            \lwDh&$\mathit{1}$&$\mathit{268.4}$
+            \\&$0.5$&$266.6$
+            \\&$0.25$&$267.0$
+            \\&$0.125$&$265.4$
+            \\&$0.0625$&$264.2$
+        \end{tabular}
+        \captionof{table}{Second table}
+        \label{tab:bt2sum}
+    \end{minipage}
+
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \caption{Todo.}
+    \label{tab:bt2benchmarks}
+    \begin{tabular}{lrrrrrrrrrrrrrrrr}
+&\textbf{\lwHu}&&&&\textbf{\lwHh}&&&
+\\$\tau$&$0.5$&$0.25$&$0.125$&$0.0625$&$0.5$&$0.25$&$0.125$&$0.0625$
+\\\hline
+\textbf{barman-sat14}&$18.8$&$18.2$&$18.4$&$18.8$&$17.8$&$16.6$&$17.0$&$15.6$
+\\\textbf{childsnack-sat14}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.2$&$0.0$
+\\\textbf{elevators-sat11}&$20.0$&$19.8$&$19.8$&$20.0$&$19.8$&$19.8$&$20.0$&$20.0$
+\\\textbf{floortile-sat11}&$7.0$&$6.8$&$6.8$&$6.8$&$7.0$&$7.0$&$7.0$&$7.0$
+\\\textbf{ged-sat14}&$16.6$&$16.2$&$14.2$&$13.6$&$19.8$&$20.0$&$20.0$&$20.0$
+\\\textbf{hiking-sat14}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
+\\\textbf{nomystery-sat11}&$8.4$&$9.0$&$8.8$&$8.8$&$9.0$&$8.2$&$8.2$&$8.2$
+\\\textbf{openstacks-sat14}&$19.0$&$19.2$&$19.4$&$19.4$&$19.0$&$19.2$&$19.4$&$19.2$
+\\\textbf{parcprinter-sat11}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
+\\\textbf{parking-sat11}&$17.8$&$17.0$&$17.2$&$16.6$&$19.8$&$19.4$&$18.4$&$18.8$
+\\\textbf{pegsol-sat11}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
+\\\textbf{scanalyzer-sat11}&$19.2$&$19.0$&$19.0$&$19.0$&$20.0$&$20.0$&$20.0$&$20.0$
+\\\textbf{sokoban-sat11}&$18.0$&$18.0$&$18.0$&$18.0$&$19.0$&$19.0$&$19.0$&$19.0$
+\\\textbf{tetris-sat14}&$9.2$&$8.4$&$6.8$&$8.2$&$11.0$&$10.2$&$10.8$&$10.0$
+\\\textbf{thoughtful-sat14}&$11.4$&$11.2$&$12.0$&$12.0$&$9.8$&$11.2$&$11.0$&$10.8$
+\\\textbf{tidybot-sat11}&$15.8$&$16.2$&$16.2$&$15.8$&$16.2$&$16.2$&$16.4$&$16.8$
+\\\textbf{transport-sat11}&$1.0$&$0.2$&$0.2$&$0.0$&$0.2$&$0.2$&$0.2$&$0.0$
+    \end{tabular}
+\end{table}

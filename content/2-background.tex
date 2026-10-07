@@ -40,7 +40,7 @@ Finally, the \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\pi\in P(s)}\Cost(\
 
 \section{State Space Search}
 
-Recall the idea of ``exploring a space'' that we hinted at in \cref{sec:ss}: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
+Recall the idea of ``exploring a space'' that we hinted at in \Cref{sec:ss}: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
 
 \begin{algorithm}[H]
     \caption{State space search}
@@ -68,11 +68,11 @@ Recall the idea of ``exploring a space'' that we hinted at in \cref{sec:ss}: a \
 \end{algorithm}
 % Maybe I should point out that this algorithm is technically not able to construct the solution path at the end. Also note that I removed ``dead-end pruning'' for clarity.
 
-A few things should be noted here. First, \cref{alg:sss} is what we consider a \kw{complete} search algorithm: this refers to the fact that this implementation guarantees to find a solution if one exists, and terminates otherwise.
+A few things should be noted here. First, \Cref{alg:sss} is what we consider a \kw{complete} search algorithm: this refers to the fact that this implementation guarantees to find a solution if one exists, and terminates otherwise.
 
 Second, throughout this work, we will exclusively concern ourselves with \kw{satisficing search}: this means that it does not matter to us if a solution is \kw{optimal}, where an \kw{optimal solution} is a solution with minimal path cost among all solutions for a specific problem.
 
-Finally, we want to point to a feature of our \cref{alg:sss} that will form the basis of much of our discussion going forward: search algorithms like the one shown here require a mechanism that can track which states the algorithm has encountered but not yet explored, and which can tell the algorithm which state to explore next. Such constructs are called \kw{open lists}:
+Finally, we want to point to a feature of our \Cref{alg:sss} that will form the basis of much of our discussion going forward: search algorithms like the one shown here require a mechanism that can track which states the algorithm has encountered but not yet explored, and which can tell the algorithm which state to explore next. Such constructs are called \kw{open lists}:
 
 An \kw{open list} $O$ is a container to which we can add a state $s$ via $O.\Add(s)$, from which we can remove (and receive) an arbitrary state using $O.\Remove()$, and for which we can check whether it is empty via $O.\Empty()$. We may also use $s\in O$ to refer to any state $s$ contained in open list $O$.
 
@@ -96,7 +96,7 @@ GBFS is called ``greedy'' because it is uniquely motivated by the heuristic: thi
 
 All heuristics (except for the \kw{perfect heuristic} $h^*$) are inherently inaccurate. The crucial part to realize is that ``inaccurate'' does not just mean ``imprecise'', but can also mean ``misleading''.
 
-Consider \cref{fig:uhr}, depicting a state space as a directed graph. The initial state has two successors: one with $h=5$ that leads straight to the goal state, and one that starts a long chain of states that each have $h=3$, before finally also arriving at the goal state.
+Consider \Cref{fig:uhr}, depicting a state space as a directed graph. The initial state has two successors: one with $h=5$ that leads straight to the goal state, and one that starts a long chain of states that each have $h=3$, before finally also arriving at the goal state.
 
 \begin{figure}
     \centering
@@ -111,7 +111,7 @@ The ``chain'' in the above example illustrates the idea of an \kw{uninformed heu
 
 \section{Stochastic Exploration}
 
-When we discuss the behavior of a search algorithm, we sometimes use the terms \kw{exploitation} and \kw{exploration}: \kw{exploitation} describes selecting the most ``promising'' states, i.e. those states we deem to be closest to a goal state, whereas \kw{exploration} describes selecting states that might not immediately lead to a smaller goal distance, but which may broaden the pool of states available for us to consider in subsequent steps. For an example, consider \cref{fig:uhr} once more: if GBFS had a way to occasionally check a state outside the ``chain'', it would eventually discover the $h=5$ path to the goal state, skipping the remainder of the chain and terminating sooner.
+When we discuss the behavior of a search algorithm, we sometimes use the terms \kw{exploitation} and \kw{exploration}: \kw{exploitation} describes selecting the most ``promising'' states, i.e. those states we deem to be closest to a goal state, whereas \kw{exploration} describes selecting states that might not immediately lead to a smaller goal distance, but which may broaden the pool of states available for us to consider in subsequent steps. For an example, consider \Cref{fig:uhr} once more: if GBFS had a way to occasionally check a state outside the ``chain'', it would eventually discover the $h=5$ path to the goal state, skipping the remainder of the chain and terminating sooner.
 
 One way of adding exploration to a search algorithm is \kw{stochastic exploration}, which refers to occasionally ignoring the strategy which the algorithm follows normally, and instead exploring a random state from the open list. The terms ``occasionally'' and ``random'' are deliberately left vague here: there are different ways of deciding when and how an exploratory step is taken, which we will discuss in subsequent sections.
 

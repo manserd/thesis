@@ -30,7 +30,7 @@ PARTS = {
         '2-background',
         '3-theory',
         '4-impl',
-        # '5-res'
+        '5-res'
     ]
 }
 

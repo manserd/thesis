@@ -1,6 +1,6 @@
 \chapter{Implementation}
 
-For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1 (henceforth just Fast Downward). The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \cref{alg:sss}.
+For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1 (henceforth just Fast Downward). The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \Cref{alg:sss}.
 
 \section{Open List}
 \label{sec:impl-ol}
@@ -19,13 +19,13 @@ Biased selection strategies impose two additional requirements: first, we need t
 
 We addressed this as follows: first, we added another \texttt{std::unordered\textunderscore map}, called \texttt{group\textunderscore by\textunderscore bias}, that maps each distinct bias value to a \texttt{std::vector} that contains the positions of all items with that bias value. This is used both for selecting a bias value (detailed below) and for uniform random removal of an item with a given bias (using swap-and-pop at a random index as described above).
 
-Biased selection works as follows (recall $\Softmin$ from \cref{sec:hg}): let $B$ refer to the set of distinct bias values, let $\beta=\min_{b'\in B}b'$, let $w=\sum_{b'\in B}\Softmin(b'-\beta)$, and let $x\in[0,w)$ randomly generated. Now let $i$ refer to a one-based index into $B$ (for this, assume $B$ has some fixed order), and initialize $i\ceq 1$. Then, for each $b'\in B$: if $x<\Softmin(b'-\beta)$, stop; otherwise, let $x\ceq x-w$, $i\ceq i+1$, and repeat. Finally, with $b$ the bias value at index $i$ in $B$, select some item uniformly at random from the vector that $b$ maps to in \texttt{group\textunderscore by\textunderscore bias}. We use $b'-\beta$ to avoid numerical problems with large $b'$.
+Biased selection works as follows (recall $\Softmin$ from \Cref{sec:hg}): let $B$ refer to the set of distinct bias values, let $\beta=\min_{b'\in B}b'$, let $w=\sum_{b'\in B}\Softmin(b'-\beta)$, and let $x\in[0,w)$ randomly generated. Now let $i$ refer to a one-based index into $B$ (for this, assume $B$ has some fixed order), and initialize $i\ceq 1$. Then, for each $b'\in B$: if $x<\Softmin(b'-\beta)$, stop; otherwise, let $x\ceq x-w$, $i\ceq i+1$, and repeat. Finally, with $b$ the bias value at index $i$ in $B$, select some item uniformly at random from the vector that $b$ maps to in \texttt{group\textunderscore by\textunderscore bias}. We use $b'-\beta$ to avoid numerical problems with large $b'$.
 
 Note that changing the bias of an item (which can happen in the \Htss type selection strategy, where the bucket bias is given by the min-h type property) requires us to find and remove the item position in the vector that \texttt{group\textunderscore by\textunderscore bias} points to for the stale bias. To avoid this walk, we additionally store alongside each item its position within its current \texttt{group\textunderscore by\textunderscore bias} vector.
 
 \section{Type Systems}
 
-The type system is notified when a new expansion begins (recall \cref{sec:impl-ol}) and returns a ``type key'', which uniquely identifies one type, for any state that is inserted into the open list. As with the buckets, we created bespoke implementations for each type system. The most straight-forward implementation is that of the HG type system, which simply returns the same type key for any states with the same heuristic value and path cost.
+The type system is notified when a new expansion begins (recall \Cref{sec:impl-ol}) and returns a ``type key'', which uniquely identifies one type, for any state that is inserted into the open list. As with the buckets, we created bespoke implementations for each type system. The most straight-forward implementation is that of the HG type system, which simply returns the same type key for any states with the same heuristic value and path cost.
 
 The HI and LW type systems are slightly more involved. Both type systems first check if the state $s$ they receive has no parent state. If this is the case, it must be that $s=s_I$, and so a new type $T_\text{root}$ is created with $\TypeDepth(T_\text{root})=0$.
 

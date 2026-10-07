@@ -104,6 +104,7 @@
 \NewDocumentCommand{\Sss}{m}{$\cdot_\text{#1}$\xspace}
 \NewDocumentCommand{\Usss}{}{\Sss{U}}
 \NewDocumentCommand{\Hsss}{}{\Sss{H}}
+\NewDocumentCommand{\gbfs}{}{GBFS}
 \NewDocumentCommand{\TypeGBFSVariant}{m m m}{#1$^\text{#2}_\text{#3}$\xspace}
 \NewDocumentCommand{\hgUu}{}{\TypeGBFSVariant{HG}{U}{U}}
 \NewDocumentCommand{\hgHu}{}{\TypeGBFSVariant{HG}{H}{U}}
@@ -129,3 +130,5 @@
 \NewDocumentCommand{\pcite}{m O{}}{\citep{#1}}
 \NewDocumentCommand{\tcite}{m O{}}{\citet{#1}}
 \fi
+
+\NewDocumentCommand{\registeredcompany}{}{$^{\circledR}$\xspace}
