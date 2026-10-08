@@ -1,6 +1,6 @@
 \chapter{Implementation}
 
-For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1 (henceforth just Fast Downward). The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \Cref{alg:sss}.
+For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1. The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \Cref{alg:sss}.
 
 \section{Open List}
 \label{sec:impl-ol}
@@ -31,6 +31,6 @@ The HI and LW type systems are slightly more involved. Both type systems first c
 
 Otherwise, let $T$ refer to the parent state's type. To find this type, both type systems maintain a \texttt{std::unordered\textunderscore map} that maps each previously encountered state to its type.
 
-If $s$ does have a parent state, the type systems check for progress: if $s$ has made progress compared to its parent state, $s$ is assigned the corresponding new type (a single shared type in the case of HI, and the type that corresponds to the low-water mark value of $s$ in the case of LW). If such a type $T'$ does not exist yet, it is created here, making sure the type depth is increased by one relative to $T$. For both type systems, the keys that point to these ``new'' types are cleared when a new expansion begins, to ensure subsequent improving states are not added to the same types as previous improving states.
+If $s$ does have a parent state, the type systems check for progress: if $s$ has made progress compared to its parent state, $s$ is assigned the corresponding new type (a single shared type in the case of HI, and the type that corresponds to the low-water mark value of $s$ in the case of LW). If such a type $T'$ does not exist yet, it is created here, making sure the type depth is increased by one relative to $T$. For both type systems, the keys that point to these new types are cleared when a new expansion begins, to ensure subsequent improving states are not added to the same types as previous improving states.
 
 Lastly, if neither of the previous two cases applied, $s$ must be a non-improving type. As such, it is assigned its parent state's type, $T$.

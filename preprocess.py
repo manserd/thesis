@@ -12,13 +12,15 @@ def sub(m):
     for line in lines:
         stmt = line[1:]
         if stmt.startswith("'"):
-            stmt = f'\\textit{{{stmt.removeprefix("'")}}}'
+            _ = "'"
+            stmt = f'\\textit{{{stmt.removeprefix(_)}}}'
         else:
             for prefix, color in {'!': 'red', '*': 'green!75!black'}.items():
                 if stmt.startswith(f'{prefix}'):
-                    stmt = f'{{\\color{{{color}}}{stmt.removeprefix(f'{prefix}')}}}'
+                    stmt = f'{{\\color{{{color}}}{stmt.removeprefix(prefix)}}}'
         stmts.append(stmt)
-    return f'\\comment{{{'\\\\'.join(stmts)}}}\n'
+    _ = '\\\\'
+    return f'\\comment{{{_.join(stmts)}}}\n'
 
 
 PARTS = {
@@ -29,7 +31,7 @@ PARTS = {
         # '1-intro',
         # '2-background',
         # '3-theory',
-        # '4-impl',
+        '4-impl',
         '5-res'
     ]
 }

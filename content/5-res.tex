@@ -32,7 +32,7 @@ In this chapter we outline the experiments we ran to evaluate the HI and LW type
 % \end{tabular}
 % }
 
-All experiments were run an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU with a 3584MiB memory limit and a 10 minute time limit per problem. Unless specified otherwise, all algorithms used the \kw{FF} heuristic \pcite{hoffmann2001}, unit costs, and the default $\Softmin$ temperature of $\tau=1$. For stochastic algorithms, all results represent averages over five runs.
+All experiments were run on an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU with a 3584MiB memory limit and a 10 minute time limit per problem. Unless specified otherwise, all algorithms used the \kw{FF} heuristic \pcite{hoffmann2001}, unit costs, and the default $\Softmin$ temperature of $\tau=1$. For stochastic algorithms, all results represent averages over five runs.
 
 \section{\exprepl}
 
@@ -52,13 +52,13 @@ Coverage is measured on a suite of problems from IPC 2011 and 2014. We call this
 \end{tabular}
 }
 
-There are a few caveats to this experiment: first, \tcite{tomasz2024} reported the total number of problems for their small experiment at 376, while our reference suite covers 380. Assume therefore that our numbers are slightly higher than theirs by default.
+There are a few caveats to this experiment: first, \tcite{tomasz2024} reported the total number of problems for their small experiment at 376, while our reference suite covers 380 problems. Assume therefore that our numbers are slightly higher than theirs by default.
 
 Second, coverage can be affected by hardware differences and noise: we tried to keep both these factors as small as we could, but some difference will remain. And third, all stochastic algorithms inherently behave differently depending on the configuration of the random number generator, which we were unable to match between their experiment and ours: we try to minimize the uncertainty by averaging our results across multiple runs, but here too, some difference will remain.
 
 While \Cref{tbl:repldomains1} and \Cref{tbl:repldomains2} show per-domain results of this experiment, \Cref{tbl:replsum} is the most insightful: for most configurations, the coverages are close enough for us to consider it reasonable to attribute the differences to the aforementioned caveats, but three outliers are worth pointing out: \hiHu, \hiHh, and \lwHh show a noticeably higher coverage in our experiment compared to theirs. Since we do not have access to \tcite{tomasz2024}'s per-domain numbers for these configurations, we unfortunately cannot determine if this difference is isolated to specific domains.
 
-We still deem this experiment a success, especially since discrepancies between the numbers appear primarily for ``mediocre''-performing configurations. This is shown by the numbers in parentheses to the right of every coverage number: these give the ``ranking'' of each result for those algorithms where the coverage is available for both works. The rankings roughly agree regarding the best and worst entries, indicating that the implementations agree regarding which configurations perform the best and which perform the worst.
+We still deem this experiment a success, especially since discrepancies between the numbers appear primarily for ``mediocre''-performing configurations. This is shown by the numbers in parentheses to the right of every coverage number: these give the ``ranking'' of each result for those algorithms where the coverage is available for both works. The rankings roughly agree for the best and worst entries, indicating that the implementations agree regarding which configurations perform the best and which perform the worst.
 
 \begin{table}[{{TBLPOS}}]
     \small
@@ -165,7 +165,7 @@ In \expbtone, we only use a subset of the reference suite. We call this the \kw{
 
 In this and all subsequent experiments using the reduced suite, when we compare coverage numbers to those measured in \exprepl, we adjust the latter coverages by subtracting the coverages achieved in the omitted domains per each configuration.
  
-We also only test a subset of the algorithms: namely, we exclude all variants that use the \Utss type selection strategy, since this strategy does not use $\Softmin$, and we only include variants that use the \Usss state selection strategy. The latter assumes that the type and state selection strategies affect an algorithm's performance independently of each other: we have no reason to assume this to be true and thus acknowledge this as a potential gap in our methodology.
+\expbtone\ only tests a subset of the algorithms: namely, we exclude all variants that use the \Utss type selection strategy, since this strategy does not use $\Softmin$, and we only include variants that use the \Usss state selection strategy. The latter assumes that the type and state selection strategies affect an algorithm's performance independently of each other: we have no reason to assume this to be true and thus acknowledge this as a potential gap in our methodology.
 
 %Address this assumption.
 
@@ -289,9 +289,7 @@ $\tau_\text{types}$&$2$&$\mathit{1}$&$0.5$&$0.25$&$0.125$&$0.0625$
 
 \expstone\ uses the same reduced suite from \expbtone\ and we again exclude those variants that do not use $\tau_\text{states}$: namely, this excludes all algorithms that use the \Usss state selection strategy.
 
-The results of this experiment are shown in \Cref{tbl:stonesum}.
-
-We observe a small improvement at higher state selection temperatures for \hiUh, \hiDh, \lwUh, and \lwHh, while \hiHh and \lwDh show no improvement at all.
+The results of this experiment are shown in \Cref{tbl:stonesum}: we observe a small improvement at higher state selection temperatures for \hiUh, \hiDh, \lwUh, and \lwHh, while \hiHh and \lwDh show no improvement at all.
 
 \begin{table}[{{TBLPOS}}]
     \small
@@ -320,7 +318,7 @@ Since the only improvements we observed in \expstone\ were at higher temperature
 
 In \Cref{tbl:sttwosum}, we see that \hiUh and \lwUh maintain higher coverages at elevated temperatures, while \hiDh does not improve beyond $\tau_\text{states}=2$. For \lwUh, higher coverage at higher temperatures is expected, since this configuration approaches \lwUu, but for \hiUh, this goes counter to the coverages we observed in \exprepl: since \hiUh at large $\tau_\text{states}$ approaches \hiUu, and since \hiUu and \hiUh reached similar coverages in \exprepl, the higher coverage here primarily shows that both experiments' coverages are affected by noise.
 
-%CHECK TOMASZ ON INTER- AND INTRA-UHR
+% CHECK TOMASZ ON INTER- AND INTRA-UHR
 
 \begin{table}[{{TBLPOS}}]
     \small
