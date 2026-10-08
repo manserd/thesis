@@ -26,10 +26,10 @@ PARTS = {
         # '0-front'
     ],
     'center': [
-        '1-intro',
-        '2-background',
-        '3-theory',
-        '4-impl',
+        # '1-intro',
+        # '2-background',
+        # '3-theory',
+        # '4-impl',
         '5-res'
     ]
 }
@@ -40,5 +40,6 @@ for key in PARTS:
         source = content / f'{name}.tex'
         text = source.read_text(encoding='utf-8')
         text = re.sub(r'(?:^%[^ ].+$\n?)+', sub, text, flags=re.MULTILINE)
+        text = text.replace('{{TBLPOS}}', 'ht')
         processed.append(text)
     (build / f'_{key}.tex').write_text('\n'.join(processed), encoding='utf-8')

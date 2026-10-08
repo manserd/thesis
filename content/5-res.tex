@@ -13,7 +13,6 @@
 In this chapter we outline the experiments we ran to evaluate the HI and LW type systems and we discuss our results. As benchmarks we used satisficing problems from the \kw{International Planning Competition}[IPC], which we retrieved from the Fast Downward benchmarks repository\footnote{\url{https://github.com/aibasel/downward-benchmarks}}.
 
 % The \kw{large suite} covers all satisficing domains from IPC 2011, 2014, 2018, and 2023.
-
 % {\scriptsize
 % \begin{tabular}{ccc}
 %     \texttt{agricola-sat18-strips}&\texttt{barman-sat14-strips}&\texttt{caldera-sat18-adl}
@@ -34,8 +33,6 @@ In this chapter we outline the experiments we ran to evaluate the HI and LW type
 % }
 
 All experiments were run an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU with a 3584MiB memory limit and a 10 minute time limit per problem. Unless specified otherwise, all algorithms used the \kw{FF} heuristic \pcite{hoffmann2001}, unit costs, and the default $\Softmin$ temperature of $\tau=1$. For stochastic algorithms, all results represent averages over five runs.
-
-% single cores?
 
 \section{\exprepl}
 
@@ -63,11 +60,10 @@ While \Cref{tbl:repldomains1} and \Cref{tbl:repldomains2} show per-domain result
 
 We still deem this experiment a success, especially since discrepancies between the numbers appear primarily for ``mediocre''-performing configurations. This is shown by the numbers in parentheses to the right of every coverage number: these give the ``ranking'' of each result for those algorithms where the coverage is available for both works. The rankings roughly agree regarding the best and worst entries, indicating that the implementations agree regarding which configurations perform the best and which perform the worst.
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \caption{A comparison between coverages achieved with our implementation (``Ours'') and the coverages given by \tcite{tomasz2024} (``Theirs'').}
-    \label{tbl:replsum}
-    \begin{tabular}{crcrcl}
+    \begin{tabular}{rrrrrr}
 \textbf{Algorithm}&\textbf{Theirs}&&\textbf{Ours}&&\textbf{Difference}
 \\\hline
 \gbfs&$198.0$&(13)&$199.0$&(13)&$+1$
@@ -86,12 +82,13 @@ We still deem this experiment a success, especially since discrepancies between 
 \\\lwDu&$258.6$&(6)&$258.8$&(9)&$+0.2$
 \\\lwDh&$263.6$&(4)&$268.4$&(6)&$+4.8$
     \end{tabular}
+    \caption{Overall coverages for \exprepl.}
+    \label{tbl:replsum}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \caption{Todo.}
-    \label{tbl:repldomains1}
     \begin{tabular}{rrrrrrrr}
 &\textbf{\gbfs}&\textbf{\hgUu}&\textbf{\hgHu}&\textbf{\hiUu}&\textbf{\hiUh}&\textbf{\hiHu}&\textbf{\hiHh}
 \\\hline
@@ -115,12 +112,13 @@ We still deem this experiment a success, especially since discrepancies between 
 \\\textbf{visitall}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$2.0$&$0.2$
 \\\textbf{woodworking}&$2.0$&$6.6$&$17.8$&$3.8$&$3.4$&$20.0$&$20.0$
     \end{tabular}
+    \caption{Per-domain coverages for \exprepl.}
+    \label{tbl:repldomains1}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \caption{Todo.}
-    \label{tbl:repldomains2}
     \begin{tabular}{rrrrrrrrr}
 &\textbf{\hiDu}&\textbf{\hiDh}&\textbf{\lwUu}&\textbf{\lwUh}&\textbf{\lwHu}&\textbf{\lwHh}&\textbf{\lwDu}&\textbf{\lwDh}
 \\\hline
@@ -144,17 +142,19 @@ We still deem this experiment a success, especially since discrepancies between 
 \\\textbf{visitall}&$19.0$&$4.0$&$0.0$&$0.0$&$1.8$&$0.2$&$4.0$&$2.2$
 \\\textbf{woodworking}&$16.2$&$20.0$&$2.2$&$2.2$&$17.8$&$17.8$&$17.2$&$19.8$
     \end{tabular}
+    \caption{Per-domain coverages for \exprepl.}
+    \label{tbl:repldomains2}
 \end{table}
 
 \section{\expbt}
 
-Recall that $\Softmin$ has a temperature parameter $\tau>0$. This parameter allows us to control how strongly biased selection strategies prefer towards lower values: at low $\tau$, the strategy almost always selects the lowest or one of the lowest values, whereas for larger $\tau$, biased selection behaves more and more like uniform selection. Since we can control $\tau$ independently for type selection as well as state selection, going forward, we will use $\tau_\text{types}$ when discussing the former, and $\tau_\text{states}$ for the latter.
+Recall that $\Softmin$ has a temperature parameter $\tau>0$. This parameter allows us to control how strongly biased selection strategies prefer lower values: at low $\tau$, the strategy almost always selects the lowest or one of the lowest values, whereas for larger $\tau$, biased selection behaves more and more like uniform selection. Since we can control $\tau$ independently for type selection as well as state selection, going forward, we will use $\tau_\text{types}$ when discussing the former, and $\tau_\text{states}$ for the latter.
 
 In \expbt, we test those algorithms that use biased type selection with different $\tau_\text{types}$ to see if some variants might benefit from more or less aggressive type biasing. Due to the larger number of runs, we separate this experiment into two sub-experiments.
 
 \subsection{\expbtone}
 
-In \expbtone, we only use a subset of the reference suite. We call this the \kw{reduced suite}, and it is identical to the reference suite, except that it removes some domains where \exprepl\ (\Cref{tbl:repldomains1} and \Cref{tbl:repldomains2}) has shown all algorithms consistently reaching full coverage or no coverage at all. In particular, we omit \texttt{childsnack-sat14-strips}, where all algorithms consistenly reached zero coverage, and we omit all the following domains where all algorithms consistently reached full coverage:
+In \expbtone, we only use a subset of the reference suite. We call this the \kw{reduced suite}, and it is identical to the reference suite, except that it removes some domains where \exprepl\ (\Cref{tbl:repldomains1} and \Cref{tbl:repldomains2}) has shown all algorithms consistently reaching almost full coverage or almost no coverage at all. In particular, we omit \texttt{childsnack-sat14-strips}, with an average coverage below 0.06, and we omit all the following domains with average coverages at or above 18.44 (out of 20):
 
 {\small
 \begin{tabular}{ccc}
@@ -163,61 +163,31 @@ In \expbtone, we only use a subset of the reference suite. We call this the \kw{
 \end{tabular}
 }
 
-When comparing coverage numbers from this experiment to other experiments, we assume that all of these domains would have shown the same coverage here as they did with $\tau_\text{types}=1$ in \exprepl.
+In this and all subsequent experiments using the reduced suite, when we compare coverage numbers to those measured in \exprepl, we adjust the latter coverages by subtracting the coverages achieved in the omitted domains per each configuration.
  
 We also only test a subset of the algorithms: namely, we exclude all variants that use the \Utss type selection strategy, since this strategy does not use $\Softmin$, and we only include variants that use the \Usss state selection strategy. The latter assumes that the type and state selection strategies affect an algorithm's performance independently of each other: we have no reason to assume this to be true and thus acknowledge this as a potential gap in our methodology.
 
-%tricky assumption here
+%Address this assumption.
 
-\Cref{tbl:btonesum} shows the results of \expbtone.
+\Cref{tbl:btonesum} shows the results of \expbtone. In the case of \hgHu, we record higher coverage at elevated temperatures, whereas for \lwHu and \lwDu, the coverage is slightly higher at lower temperatures. For \hiHu and \hiDu, we do not observe any significantly better results at non-default temperatures.
 
-%missing benchmark table
-
-In the case of \hgHu, we record higher coverage at elevated temperatures, whereas for \lwHu and \lwDu, the coverage is slightly higher at lower temperatures. For \hiHu and \hiDu, we do not observe any significantly better results at non-default temperatures.
-
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \begin{tabular}[t]{clr}
-        \textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
-        \\\hline
-        \hgHu&$10$&$261.2$
-        \\&$5$&$267.4$
-        \\&$2$&$271.0$
-        \\&$\mathit{1}$&$\mathit{261.8}$
-        \\&$0.5$&$247.8$
-        \\&$0.25$&$236.2$
-        \\\hline
-        \hiHu&$10$&$263.4$
-        \\&$5$&$270.4$
-        \\&$2$&$272.4$
-        \\&$\mathit{1}$&$\mathit{273.2}$
-        \\&$0.5$&$270.0$
-        \\&$0.25$&$268.4$
-        \\\hline
-        \hiDu&$10$&$270.6$
-        \\&$5$&$284.6$
-        \\&$2$&$298.4$
-        \\&$\mathit{1}$&$\mathit{296.2}$
-        \\&$0.5$&$298.8$
-        \\&$0.25$&$298.6$
-        \\\hline
-        \lwHu&$10$&$249.2$
-        \\&$5$&$255.2$
-        \\&$2$&$262.6$
-        \\&$\mathit{1}$&$\mathit{261.2}$
-        \\&$0.5$&$267.2$
-        \\&$0.25$&$263.4$
-        \\\hline
-        \lwDu&$10$&$249.0$
-        \\&$5$&$254.2$
-        \\&$2$&$263.8$
-        \\&$\mathit{1}$&$\mathit{258.8}$
-        \\&$0.5$&$265.0$
-        \\&$0.25$&$268.2$
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{types}$&$10$&$5$&$2$&$\mathit{1}$&$0.5$&$0.25$
+\\\hline
+\hgHu&$141.2$&$147.4$&$\boldsymbol{151.0}$&$\mathit{142.8}$&$127.8$&$116.2$
+\\\hiHu&$143.4$&$150.4$&$152.4$&$\boldsymbol{\mathit{157.4}}$&$150.0$&$148.4$
+\\\hiDu&$150.6$&$164.6$&$178.4$&$\boldsymbol{\mathit{181.2}}$&$178.8$&$178.6$
+\\\lwHu&$129.2$&$135.2$&$142.6$&$\mathit{145.8}$&$\boldsymbol{147.2}$&$143.4$
+\\\lwDu&$129.0$&$134.2$&$143.8$&$\mathit{143.8}$&$145.0$&$\boldsymbol{148.2}$
     \end{tabular}
-    \caption{Coverage of a selection of algorithms under different type selection temperatures. Note that $\tau$ refers to $\tau_\text{types}$.}
+    \caption{Overall coverages for \expbtone.}
     \label{tbl:btonesum} % needs to come after the caption
 \end{table}
+
+%Missing per-domain coverages.
 
 \subsection{\expbttwo}
 
@@ -225,58 +195,36 @@ The goal of \expbttwo\ is to evaluate the most promising algorithms of \expbtone
 
 In \expbtone, \lwHu and \lwDu achieved higher coverage at reduced temperatures: therefore, in this experiment, we additionally test these variants at even lower temperatures. Also, because this experiment omits the HI variants and tests fewer different temperatures overall, we are now also able to evaluate the \Hsss variants of LW.
 
-As \hgHu only showed an improvement at $\tau_\text{types}=2$ and not beyond, and since there are no other state selection strategies for this algorithm, our only goal for this variant is to see if its coverage on the full reference suite reflects the predicted reference suite coverage from the first stage.
+As \hgHu only showed an improvement at $\tau_\text{types}=2$ and not beyond, and since there are no other state selection strategies for this algorithm, our only goal for this variant is to see if its coverage on the full reference suite remains better at this increased temperature compared to $\tau_\text{types}=1$.
 
-First, observe in \Cref{tbl:bttwodomains1} and \Cref{tbl:bttwodomains2} that the domains we omitted in \expbtone\ show the same coverage here as in \exprepl, with only \texttt{ged} showing slightly lower numbers. We can therefore reasonably assume that those variants that we tested on the reduced suite in \expbtone\ would likely produce coverage numbers similar to those we predicted in \Cref{tbl:btonesum} when evaluated on the full reference suite.
+% First, observe in \Cref{tbl:bttwodomains1} and \Cref{tbl:bttwodomains2} that the domains we omitted in \expbtone\ show the same coverage here as in \exprepl, with only \texttt{ged} showing slightly lower numbers. We can therefore reasonably assume that those variants that we tested on the reduced suite in \expbtone\ would likely produce coverage numbers similar to those we predicted in \Cref{tbl:btonesum} when evaluated on the full reference suite.
 
-Second, \Cref{tbl:bttwosum} shows that \lwHh consistently managed to solve about 5-10 more problems than \lwHu, which matches the relative improvement we observed between these variants in \exprepl. The same applies for \lwDu and \lwDh, albeit with a smaller difference. We therefore assume that, at least for the configurations we tested, changing $\tau_\text{types}$ did not significantly alter the effectiveness of the state selection strategy.
+\Cref{tbl:bttwosum} shows that \lwHh consistently managed to solve about five to ten more problems than \lwHu, which matches the relative improvement we observed between these variants in \exprepl. Interestingly, the same cannot be said about \lwDu and \lwDh: here, \lwDh gradually loses its lead over \lwDu as $\tau_\text{types}$ decreases, suggesting that when LW aggressively prefers types with maximal depth, the state selection strategy may become less important.
 
-Third, we observe no additional improvements compared to \expbtone\ at more extreme values of $\tau_\text{types}$. This matches our expectations, since $\tau_\text{types}=0.125$ will already select the lowest value most of the time.
+Apart from this oddity, we observe no additional improvements compared to \expbtone\ at more extreme values of $\tau_\text{types}$. This matches our expectations, since $\tau_\text{types}=0.25$ will already select the lowest value most of the time.
 
-Additionally, notice that the coverage numbers of identical configurations that we tested both in \expbtone\ and \expbttwo\ frequently show a difference of up to five problems between both experiments. This indicates that differences in coverage between values of $\tau_\text{types}$ are not definitive since they could be caused purely by noise.
-
-\begin{table}[H]
-    \centering
-    \begin{tabular}[t]{rrr}
-        \textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
-        \\\hline
-        \hgHu&$2$&$271.4$
-        \\&$\mathit{1}$&$\mathit{261.8}$
-        \\\hline
-        \lwHu&$\mathit{1}$&$\mathit{261.2}$
-        \\&$0.5$&$262.4$
-        \\&$0.25$&$258.6$
-        \\&$0.125$&$256.6$
-        \\&$0.0625$&$257.0$
-        \\\hline
-        \lwHh&$\mathit{1}$&$\mathit{269.9}$
-        \\&$0.5$&$267.8$
-        \\&$0.25$&$265.4$
-        \\&$0.125$&$266.4$
-        \\&$0.0625$&$263.4$
-        \\\hline
-        \lwDu&$\mathit{1}$&$\mathit{258.8}$
-        \\&$0.5$&$261.6$
-        \\&$0.25$&$263.6$
-        \\&$0.125$&$261.6$
-        \\&$0.0625$&$263.0$
-        \\\hline
-        \lwDh&$\mathit{1}$&$\mathit{268.4}$
-        \\&$0.5$&$266.6$
-        \\&$0.25$&$267.0$
-        \\&$0.125$&$265.4$
-        \\&$0.0625$&$264.2$
-    \end{tabular}
-    \caption{Coverage of a selection of algorithms under different type selection temperatures. Note that $\tau$ refers to $\tau_\text{types}$.}
-    \label{tbl:bttwosum} % needs to come after the caption
-\end{table}
-
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
     \small
     \centering
-    \begin{tabular}{rrrrrrrrrrrrrrrrrr}
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{types}$&$2$&$\mathit{1}$&$0.5$&$0.25$&$0.125$&$0.0625$
+\\\hline
+\hgHu&$\mathbf{271.4}$&$\mathit{261.8}$
+\\\lwHu&&$\mathit{261.2}$&$\boldsymbol{262.4}$&$258.6$&$256.6$&$257.0$
+\\\lwHh&&$\boldsymbol{\mathit{269.0}}$&$267.8$&$265.4$&$266.4$&$263.4$
+\\\lwDu&&$\mathit{258.8}$&$261.6$&$\boldsymbol{263.6}$&$261.6$&$263.0$
+\\\lwDh&&$\boldsymbol{\mathit{268.4}}$&$266.6$&$267.0$&$265.4$&$264.2$
+    \end{tabular}
+    \caption{Overall coverages for \expbttwo.}
+    \label{tbl:bttwosum}
+\end{table}
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrrrrrrrrrrrrr}
 &\textbf{\hgHu}&\textbf{\lwHu}&&&&\textbf{\lwHh}&&&
-\\$\tau$&$2$&$0.5$&$0.25$&$0.125$&$0.0625$&$0.5$&$0.25$&$0.125$&$0.0625$
+\\$\tau_\text{types}$&$2$&$0.5$&$0.25$&$0.125$&$0.0625$&$0.5$&$0.25$&$0.125$&$0.0625$
 \\\hline
 \textbf{barman}&$14.8$&$18.8$&$18.2$&$18.4$&$18.8$&$17.8$&$16.6$&$17.0$&$15.6$
 \\\textbf{childsnack}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.2$&$0.0$
@@ -298,16 +246,16 @@ Additionally, notice that the coverage numbers of identical configurations that 
 \\\textbf{visitall}&$0.4$&$0.6$&$0.0$&$0.6$&$0.8$&$0.2$&$0.2$&$0.2$&$0.6$
 \\\textbf{woodworking}&$19.0$&$19.6$&$19.4$&$19.2$&$19.2$&$19.2$&$18.2$&$18.6$&$17.4$
     \end{tabular}
-    \caption{Todo.}
+    \caption{Per-domain coverages for \expbttwo.}
     \label{tbl:bttwodomains1}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
     \small
     \centering
     \begin{tabular}{rrrrrrrrrrrrrrrrr}
 &\textbf{\lwDu}&&&&\textbf{\lwDh}&&&
-\\$\tau$&$0.5$&$0.25$&$0.125$&$0.0625$&$0.5$&$0.25$&$0.125$&$0.0625$
+\\$\tau_\text{types}$&$0.5$&$0.25$&$0.125$&$0.0625$&$0.5$&$0.25$&$0.125$&$0.0625$
 \\\hline
 \textbf{barman}&$18.8$&$19.2$&$19.0$&$18.4$&$17.4$&$17.0$&$17.2$&$16.4$
 \\\textbf{childsnack}&$0.0$&$0.2$&$0.0$&$0.0$&$0.0$&$0.0$&$0.2$&$0.0$
@@ -329,7 +277,7 @@ Additionally, notice that the coverage numbers of identical configurations that 
 \\\textbf{visitall}&$4.0$&$3.4$&$4.0$&$4.0$&$3.0$&$3.4$&$2.4$&$2.2$
 \\\textbf{woodworking}&$19.2$&$18.8$&$19.4$&$19.4$&$17.8$&$19.2$&$17.6$&$17.6$
     \end{tabular}
-    \caption{Todo.}
+    \caption{Per-domain coverages for \expbttwo.}
     \label{tbl:bttwodomains2}
 \end{table}
 
@@ -343,101 +291,56 @@ Additionally, notice that the coverage numbers of identical configurations that 
 
 The results of this experiment are shown in \Cref{tbl:stonesum}.
 
-%missing benchmark table
+We observe a small improvement at higher state selection temperatures for \hiUh, \hiDh, \lwUh, and \lwHh, while \hiHh and \lwDh show no improvement at all.
 
-We observe a small improvement at higher state selection temperatures for \hiUh, \hiDh, \lwUh, \lwHh, and \lwDh, while \hiHh shows no improvement at all.
-
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \begin{tabular}{rrr}
-\textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{states}$&$10$&$5$&$2$&$\mathit{1}$&$0.5$&$0.25$
 \\\hline
-\hiUh&$10$&$206.6$
-\\&$5$&$207.6$
-\\&$2$&$207.8$
-\\&$\mathit{1}$&$\mathit{201.8}$
-\\&$0.5$&$201.8$
-\\&$0.25$&$200.2$
-\\\hline
-\hiHh&$10$&$279.2$
-\\&$5$&$279.4$
-\\&$2$&$280.0$
-\\&$\mathit{1}$&$\mathit{281.2}$
-\\&$0.5$&$275.0$
-\\&$0.25$&$260.8$
-\\\hline
-\hiDh&$10$&$278.4$
-\\&$5$&$287.0$
-\\&$2$&$292.6$
-\\&$\mathit{1}$&$\mathit{287.8}$
-\\&$0.5$&$284.8$
-\\&$0.25$&$267.6$
-\\\hline
-\lwUh&$10$&$211.8$
-\\&$5$&$208.8$
-\\&$2$&$204.0$
-\\&$\mathit{1}$&$\mathit{199.8}$
-\\&$0.5$&$204.2$
-\\&$0.25$&$205.0$
-\\\hline
-\lwHh&$10$&$260.4$
-\\&$5$&$266.2$
-\\&$2$&$270.6$
-\\&$\mathit{1}$&$\mathit{269.0}$
-\\&$0.5$&$254.4$
-\\&$0.25$&$243.0$
-\\\hline
-\lwDh&$10$&$264.2$
-\\&$5$&$268.6$
-\\&$2$&$269.6$
-\\&$\mathit{1}$&$\mathit{268.4}$
-\\&$0.5$&$252.8$
-\\&$0.25$&$247.6$
+\hiUh&$86.6$&$87.6$&$\boldsymbol{87.8}$&$\mathit{86.6}$&$81.8$&$80.2$
+\\\hiHh&$159.2$&$159.4$&$160.0$&$\boldsymbol{\mathit{162.2}}$&$155.0$&$140.8$
+\\\hiDh&$158.4$&$167.0$&$\boldsymbol{172.6}$&$\mathit{170.8}$&$164.8$&$147.6$
+\\\lwUh&$\boldsymbol{91.8}$&$88.8$&$84.0$&$\mathit{88.8}$&$84.2$&$85.0$
+\\\lwHh&$140.4$&$146.2$&$\boldsymbol{150.6}$&$\mathit{150.0}$&$134.4$&$123.0$
+\\\lwDh&$144.2$&$148.6$&$149.6$&$\boldsymbol{\mathit{150.4}}$&$132.8$&$127.6$
     \end{tabular}
-    \caption{Coverage of a selection of algorithms under different state selection temperatures. Note that $\tau$ refers to $\tau_\text{states}$.}
+    \caption{Overall coverages for \expstone.}
     \label{tbl:stonesum}
 \end{table}
+
+%Missing per-domain coverages.
 
 \subsection{\expsttwo}
 
 Since the only improvements we observed in \expstone\ were at higher temperatures, in \expsttwo, we increase those temperatures further, as well as returning to the full reference suite.
 
-First, observe again in \Cref{tbl:sttwodomains1} and \Cref{tbl:sttwodomains2} that the domains omitted in \expstone\ show the expected coverage, as was the case between \expbtone\ and \expbttwo. We can therefore again assume the coverages shown \Cref{tbl:stonesum} are representative for the full reference suite.
+% First, observe again in \Cref{tbl:sttwodomains1} and \Cref{tbl:sttwodomains2} that the domains omitted in \expstone\ show the expected coverage, as was the case between \expbtone\ and \expbttwo. We can therefore again assume the coverages shown \Cref{tbl:stonesum} are representative for the full reference suite.
 
-In \Cref{tbl:sttwosum}, we see that \hiUh and \lwUh maintain higher coverages at elevated temperatures, while \hiUh does not improve beyond $\tau_\text{states}=2$. For \lwUh, higher coverage at higher temperatures is expected, since this configuration approaches \lwUu, but for \hiUh, this goes counter to the coverages we observed in \exprepl: since \hiUh at large $\tau_\text{states}$ approaches \hiUu, and since \hiUu and \hiUh reached similar coverages in \exprepl, the higher coverage here primarily shows that both experiments' coverages are affected by noise.
+In \Cref{tbl:sttwosum}, we see that \hiUh and \lwUh maintain higher coverages at elevated temperatures, while \hiDh does not improve beyond $\tau_\text{states}=2$. For \lwUh, higher coverage at higher temperatures is expected, since this configuration approaches \lwUu, but for \hiUh, this goes counter to the coverages we observed in \exprepl: since \hiUh at large $\tau_\text{states}$ approaches \hiUu, and since \hiUu and \hiUh reached similar coverages in \exprepl, the higher coverage here primarily shows that both experiments' coverages are affected by noise.
 
-\begin{table}[H]
+%CHECK TOMASZ ON INTER- AND INTRA-UHR
+
+\begin{table}[{{TBLPOS}}]
+    \small
     \centering
-    \begin{tabular}{rrr}
-        \textbf{Algorithm}&\textbf{$\tau$}&\textbf{Coverage}
-        \\\hline
-        \hiUh&$20$&$206.8$
-        \\&$10$&$202.4$
-        \\&$5$&$203.4$
-        \\&$2$&$203.4$
-        \\&$1$&$201.2$
-        \\\hline
-        \hiDh&$20$&$273.4$
-        \\&$10$&$277.2$
-        \\&$5$&$283.8$
-        \\&$2$&$290.4$
-        \\&$1$&$288.0$
-        \\\hline
-        \lwUh&$20$&$202.0$
-        \\&$10$&$205.6$
-        \\&$5$&$202.0$
-        \\&$2$&$194.4$
-        \\&$1$&$198.8$
+    \begin{tabular}{rrrrrr}
+$\tau_\text{states}$&$20$&$10$&$5$&$2$&$1$
+\\\hline
+\hiUh&$\boldsymbol{206.8}$&$202.4$&$203.4$&$203.4$&$201.2$
+\\\hiDh&$273.4$&$277.2$&$283.8$&$\boldsymbol{290.4}$&$288.0$
+\\\lwUh&$202.0$&$\boldsymbol{205.6}$&$202.0$&$194.4$&$198.8$
     \end{tabular}
-    \caption{Coverage of a selection of algorithms under different state selection temperatures. Note that $\tau$ refers to $\tau_\text{states}$.}
+    \caption{Overall coverages for \expsttwo.}
     \label{tbl:sttwosum}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
     \centering
     \begin{tabular}{rrrrrrrrrrrrrrr}
 &\textbf{\hiUh}&&&&&\textbf{\hiDh}&
-\\$\tau$&$20$&$10$&$5$&$2$&$1$&$20$&$10$
+\\$\tau_\text{states}$&$20$&$10$&$5$&$2$&$1$&$20$&$10$
 \\\hline
 \textbf{barman}&$10.2$&$7.8$&$9.4$&$6.8$&$2.8$&$20.0$&$20.0$
 \\\textbf{childsnack}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$
@@ -459,15 +362,15 @@ In \Cref{tbl:sttwosum}, we see that \hiUh and \lwUh maintain higher coverages at
 \\\textbf{visitall}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$5.0$&$4.6$
 \\\textbf{woodworking}&$4.2$&$3.8$&$3.8$&$3.8$&$3.4$&$8.6$&$10.4$
     \end{tabular}
-    \caption{Todo.}
+    \caption{Per-domain coverages for \expsttwo.}
     \label{tbl:sttwodomains1}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
     \centering
     \begin{tabular}{rrrrrrrrrrrrrrrrr}
 &\textbf{\hiDh}&&&\textbf{\lwUh}&&&&
-\\$\tau$&$5$&$2$&$1$&$20$&$10$&$5$&$2$&$1$
+\\$\tau_\text{states}$&$5$&$2$&$1$&$20$&$10$&$5$&$2$&$1$
 \\\hline
 \textbf{barman}&$20.0$&$20.0$&$20.0$&$5.6$&$5.2$&$4.0$&$1.2$&$1.2$
 \\\textbf{childsnack}&$0.0$&$0.2$&$0.0$&$0.2$&$0.2$&$0.0$&$0.0$&$0.0$
@@ -489,11 +392,13 @@ In \Cref{tbl:sttwosum}, we see that \hiUh and \lwUh maintain higher coverages at
 \\\textbf{visitall}&$4.0$&$4.0$&$4.2$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$
 \\\textbf{woodworking}&$15.0$&$19.2$&$20.0$&$2.0$&$2.0$&$2.2$&$2.0$&$2.2$
     \end{tabular}
-    \caption{Todo.}
+    \caption{Per-domain coverages for \expsttwo.}
     \label{tbl:sttwodomains2}
 \end{table}
 
-We conclude this section with some closing remarks regarding both \expbt\ and \expst. In both experiments, raising the $\Softmin$ temperature showed no consistent improvement. This aligns with our expectations, since raising the temperature pushes biased strategies toward behaving like uniform strategies, and uniform strategies most often perform similar to or worse than biased ones, as we observed in \exprepl. Lowering the temperature produced some minor improvements in some configurations, but none that were severe enough to definitively show that the improvements were not simply the product of noise. We therefore think it is reasonable to assume that the default temperature $\tau=1$ for both type and state selection is sufficiently close to optimal for all tested configurations.
+We conclude this section with some closing remarks regarding both \expbt\ and \expst. In both experiments, raising the $\Softmin$ temperature either shows no noticeable effect or it shows consistent worsening of the coverage. This aligns with our expectations, since raising the temperature pushes biased strategies toward behaving like uniform strategies, and uniform strategies most often perform similar to or worse than biased ones (with the exception of \hiDu, which remains a mystery), as we observed in \exprepl.
+
+%Need to take a closer look at how the results at lower temperatures could be explained. Also need to check for differences in per-domain coverages.
 
 \section{\expeps}
 
@@ -501,34 +406,34 @@ So far, all of our experiments (as well as those performed by \tcite{tomasz2024}
 
 In \expeps, we aim to test our new type systems under different values of $\epsilon$ to see if this applies here, too. For this, we replace the alternating open list that manages exploration and exploitation in our configurations with an open list that only performs an exploratory expansion with some probability $\epsilon$. Note that when $\epsilon=0.5$, this open list performs identically to the alternating open list if the number of expansions is sufficiently large. The range of values for $\epsilon$ that we test include values below $\epsilon=0.5$, since these were the most effective in \tcite{valenzano2014}'s work, as well as one value above $\epsilon=0.5$ to test if our algorithms could benefit from more exploration.
 
-Note also that, again due to the large number of runs, this experiment uses the reduced suite. Accordingly, the results we present were artificially increased by 120 under the assumption that the omitted domains would have had the same coverage as in \exprepl.
+% Note also that, again due to the large number of runs, this experiment uses the reduced suite. Accordingly, the results we present were artificially increased by 120 under the assumption that the omitted domains would have had the same coverage as in \exprepl.
 
-\Cref{tbl:epssum} shows the results of this experiment. Note that the coverages in the \emph{ALT} column, which repeats the coverages from \exprepl, are consistently close to those in the $\epsilon=0.5$ column, which confirms that these algorithms behave like the ones that use an alternating open list when $\epsilon=0.5$. \hgHu, \lwHh, and \lwDh, perform slightly better at higher $\epsilon$, but these gains are small enough to be attributable to noise. \hgUu, \hiDu, \hiDh, \lwHu, and \lwDu reached their highest coverage at $\epsilon=0.5$, while \hiUu, \hiUh, \lwUu, and \lwUh seemed to perform slightly better at lower $\epsilon$. Particularly in the case of \hiUu and \hiUh, the gains are large enough to hint at more than just noise.
+\Cref{tbl:epssum} shows the results of this experiment. Note that the coverages in the \emph{ALT} column, which repeats the coverages from \exprepl\ (minus the omitted domains), are consistently close to those in the $\epsilon=0.5$ column, which confirms that these algorithms behave like the ones that use an alternating open list when $\epsilon=0.5$.
 
-Overall, we deem this experiment inconclusive. We would have expected a more definitive improvement at lower $\epsilon$ across all configurations if the new type systems truly suffered from too much exploration.
+%Study the results.
 
-\begin{table}[H]
+\begin{table}[{{TBLPOS}}]
     \small
     \centering
     \begin{tabular}{rrrrrr}
 $\epsilon$&$0.1$&$0.25$&$0.5$&\emph{ALT}&$0.75$
 \\\hline
-\hgUu&$218.8$&$219.4$&$\mathbf{221.4}$&$\mathit{215.2}$&$213.8$
-\\\hgHu&$229.6$&$246.8$&$259.8$&$\mathit{261.8}$&$\mathbf{266.2}$
-\\\hiUu&$\mathbf{215.2}$&$212.4$&$204.0$&$\mathit{199.4}$&$193.4$
-\\\hiUh&$\mathbf{212.4}$&$212.0$&$202.2$&$\mathit{201.8}$&$198.0$
-\\\hiHu&$256.2$&$264.8$&$272.0$&$\mathbf{\mathit{273.2}}$&$271.0$
-\\\hiHh&$257.0$&$271.4$&$277.4$&$\mathbf{\mathit{281.2}}$&$278.2$
-\\\hiDu&$279.2$&$292.4$&$\mathbf{296.4}$&$\mathit{296.2}$&$296.0$
-\\\hiDh&$272.6$&$282.2$&$\mathbf{288.0}$&$\mathit{287.8}$&$287.4$
-\\\lwUu&$211.4$&$\mathbf{213.0}$&$208.8$&$\mathit{207.6}$&$201.4$
-\\\lwUh&$\mathbf{207.8}$&$\mathbf{207.8}$&$203.2$&$\mathit{199.8}$&$200.2$
-\\\lwHu&$240.8$&$257.2$&$\mathbf{261.6}$&$\mathit{261.2}$&$258.8$
-\\\lwHh&$235.4$&$254.8$&$267.2$&$\mathit{269.0}$&$\mathbf{271.6}$
-\\\lwDu&$240.0$&$254.6$&$\mathbf{263.6}$&$\mathit{258.8}$&$260.2$
-\\\lwDh&$240.8$&$257.4$&$268.8$&$\mathit{268.4}$&$\mathbf{272.6}$
+\hgUu&$98.8$&$99.4$&$101.4$&$\boldsymbol{\mathit{103.0}}$&$93.8$
+\\\hgHu&$109.6$&$126.8$&$139.8$&$\mathit{142.8}$&$\boldsymbol{146.2}$
+\\\hiUu&$\boldsymbol{95.2}$&$92.4$&$84.0$&$\mathit{84.4}$&$73.4$
+\\\hiUh&$\boldsymbol{92.4}$&$92.0$&$82.2$&$\mathit{86.6}$&$78.0$
+\\\hiHu&$136.2$&$144.8$&$152.0$&$\boldsymbol{\mathit{157.4}}$&$151.0$
+\\\hiHh&$137.0$&$151.4$&$157.4$&$\boldsymbol{\mathit{162.2}}$&$158.2$
+\\\hiDu&$159.2$&$172.4$&$176.4$&$\boldsymbol{\mathit{181.2}}$&$176.0$
+\\\hiDh&$152.6$&$162.2$&$168.0$&$\boldsymbol{\mathit{170.8}}$&$167.4$
+\\\lwUu&$91.4$&$\boldsymbol{93.0}$&$88.8$&$\mathit{91.2}$&$81.4$
+\\\lwUh&$87.8$&$87.8$&$83.2$&$\boldsymbol{\mathit{88.8}}$&$80.2$
+\\\lwHu&$120.8$&$137.2$&$141.6$&$\boldsymbol{\mathit{145.8}}$&$138.8$
+\\\lwHh&$115.4$&$134.8$&$147.2$&$\mathit{150.0}$&$\boldsymbol{151.6}$
+\\\lwDu&$120.0$&$134.6$&$143.6$&$\boldsymbol{\mathit{143.8}}$&$140.2$
+\\\lwDh&$120.8$&$137.4$&$148.8$&$\mathit{150.4}$&$\boldsymbol{152.6}$
     \end{tabular}
-    \caption{Todo.}
+    \caption{Overall coverages for \expeps.}
     \label{tbl:epssum}
 \end{table}
 
