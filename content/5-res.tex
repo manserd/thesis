@@ -8,9 +8,17 @@
 \NewDocumentCommand{\expeps}{}{Experiment D}
 \NewDocumentCommand{\explarge}{}{Experiment E}
 
-\chapter{Evaluation}
-
-In this chapter we outline the experiments we ran to evaluate the HI and LW type systems and we discuss our results. As benchmarks we used satisficing problems from the \kw{International Planning Competition}[IPC], which we retrieved from the Fast Downward benchmarks repository\footnote{\url{https://github.com/aibasel/downward-benchmarks}}.
+% {\small
+% \begin{tabular}{ccc}
+%     \texttt{barman-sat14-strips}&\texttt{childsnack-sat14-strips}&\texttt{elevators-sat11-strips}
+%     \\\texttt{floortile-sat11-strips}&\texttt{ged-sat14-strips}&\texttt{hiking-sat14-strips}
+%     \\\texttt{nomystery-sat11-strips}&\texttt{openstacks-sat14-strips}&\texttt{parcprinter-sat11-strips}
+%     \\\texttt{parking-sat11-strips}&\texttt{pegsol-sat11-strips}&\texttt{scanalyzer-sat11-strips}
+%     \\\texttt{sokoban-sat11-strips}&\texttt{tetris-sat14-strips}&\texttt{thoughtful-sat14-strips}
+%     \\\texttt{tidybot-sat11-strips}&\texttt{transport-sat11-strips}&\texttt{visitall-sat14-strips}
+%     \\&\texttt{woodworking-sat11-strips}
+% \end{tabular}
+% }
 
 % The \kw{large suite} covers all satisficing domains from IPC 2011, 2014, 2018, and 2023.
 % {\scriptsize
@@ -32,33 +40,31 @@ In this chapter we outline the experiments we ran to evaluate the HI and LW type
 % \end{tabular}
 % }
 
-All experiments were run on an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU with a 3584MiB memory limit and a 10 minute time limit per problem. Unless specified otherwise, all algorithms used the \kw{FF} heuristic \pcite{hoffmann2001}, unit costs, and the default $\Softmin$ temperature of $\tau=1$. For stochastic algorithms, all results represent averages over five runs.
+\chapter{Evaluation}
 
-\section{\exprepl}
+In this chapter we outline the experiments we ran to evaluate the HI and LW type systems and we discuss our observations. As benchmarks we used satisficing problems from the \kw{International Planning Competition}[IPC], which we retrieved from the Fast Downward benchmarks repository\footnote{\url{https://github.com/aibasel/downward-benchmarks}}. Specifically, we used the same IPC 2011 and 2014 domains that \tcite{tomasz2024} used in their first experiment, except that our suite totalled 380 problems whereas \tcite{tomasz2024} report their total number of problems at 376. We were unable to determine where this difference comes from: assume therefore that when comparing coverage numbers between both works, our numbers are slightly higher by default.
 
-In \exprepl, we aim to establish that our implementation is correct and that it performs similarly enough to the implementation used by \tcite{tomasz2024} for results to be comparable across both works. To do so, we replicate the first experiment performed by \tcite{tomasz2024}, which compares coverage numbers between GBFS, \hgUu (which they refer to as Type-GBFS), and all variants of the new algorithms.
+All experiments were run on an AMD Epyc 7742 CPU, with a 3584MiB memory limit and 10 minute time limit per task. Aside from the CPU, this matches \tcite{tomasz2024}'s experimental setup, which was done to keep the coverage numbers somewhat comparable across both works. For this same reason, we also used the \kw{FF} heuristic \pcite{hoffmann2001}, treated all problems as unit-cost problems, and used the same default $\Softmin$ temperature of $\tau=1$ for algorithms that perform biased type or state selection, unless specified otherwise. Finally, for stochastic algorithms, all results represent averages over five runs.
 
-Coverage is measured on a suite of problems from IPC 2011 and 2014. We call this suite the \kw{reference suite}, and it includes the following domains:
+% All experiments were run on an Intel\registeredcompany Xeon\registeredcompany Silver 4114 CPU
 
-{\small
-\begin{tabular}{ccc}
-    \texttt{barman-sat14-strips}&\texttt{childsnack-sat14-strips}&\texttt{elevators-sat11-strips}
-    \\\texttt{floortile-sat11-strips}&\texttt{ged-sat14-strips}&\texttt{hiking-sat14-strips}
-    \\\texttt{nomystery-sat11-strips}&\texttt{openstacks-sat14-strips}&\texttt{parcprinter-sat11-strips}
-    \\\texttt{parking-sat11-strips}&\texttt{pegsol-sat11-strips}&\texttt{scanalyzer-sat11-strips}
-    \\\texttt{sokoban-sat11-strips}&\texttt{tetris-sat14-strips}&\texttt{thoughtful-sat14-strips}
-    \\\texttt{tidybot-sat11-strips}&\texttt{transport-sat11-strips}&\texttt{visitall-sat14-strips}
-    \\&\texttt{woodworking-sat11-strips}
-\end{tabular}
-}
+\section{Comparison to Original Work}
 
-There are a few caveats to this experiment: first, \tcite{tomasz2024} reported the total number of problems for their small experiment at 376, while our reference suite covers 380 problems. Assume therefore that our numbers are slightly higher than theirs by default.
+We first aimed to establish that our implementation is correct and that it performs similarly to the implementation used by \tcite{tomasz2024}. To do so, we replicated the first experiment performed by \tcite{tomasz2024}, which compares coverage numbers between GBFS, \hgUu (which they refer to as Type-GBFS), and all variants of the new algorithms.
 
-Second, coverage can be affected by hardware differences and noise: we tried to keep both these factors as small as we could, but some difference will remain. And third, all stochastic algorithms inherently behave differently depending on the configuration of the random number generator, which we were unable to match between their experiment and ours: we try to minimize the uncertainty by averaging our results across multiple runs, but here too, some difference will remain.
+We point out two additional caveats that apply to this comparison in particular, but will also remain relevant for all other results. First, coverage can be affected by hardware differences and noise: this is particularly relevant here, where we are comparing results obtained on different systems. And second, all stochastic algorithms inherently behave differently depending on the configuration of the random number generator, which we were unable to match between the experiments performed by \tcite{tomasz2024} and ours: in both works, the results are averaged across multiple runs, but some difference will remain.
 
-While \Cref{tbl:repldomains1} and \Cref{tbl:repldomains2} show per-domain results of this experiment, \Cref{tbl:replsum} is the most insightful: for most configurations, the coverages are close enough for us to consider it reasonable to attribute the differences to the aforementioned caveats, but three outliers are worth pointing out: \hiHu, \hiHh, and \lwHh show a noticeably higher coverage in our experiment compared to theirs. Since we do not have access to \tcite{tomasz2024}'s per-domain numbers for these configurations, we unfortunately cannot determine if this difference is isolated to specific domains.
+\Cref{tbl:replsum} shows a comparison between the coverage numbers reported by \tcite{tomasz2024} and those obtained by us. Our implementation agrees with \tcite{tomasz2024}'s findings that the configurations that pair the heuristic improvement type system with depth-biased type selection, that is \hiDh and \hiDu, perform by far the best.
 
-We still deem this experiment a success, especially since discrepancies between the numbers appear primarily for ``mediocre''-performing configurations. This is shown by the numbers in parentheses to the right of every coverage number: these give the ``ranking'' of each result for those algorithms where the coverage is available for both works. The rankings roughly agree for the best and worst entries, indicating that the implementations agree regarding which configurations perform the best and which perform the worst.
+Interestingly, the difference between the top two performers and the subsequent entries is far less pronounced in our results as in theirs: while \tcite{tomasz2024} observed their third-best configuration, \hgHu, solving almost 20 fewer problems compared to both works' second-best, \hiDh, our third-best configuration, \hiHh, only covered around eight fewer problems than our second-best.
+
+Notably, we generally observe a more gradual decline in coverage from our best to our ``mediocre'' entries, whereas \tcite{tomasz2024} recorded all their ``mediocre'' performers achieving relatively similar coverages, as is illustrated in \Cref{fig:repltrend}. This is most visible with \hiHu, \hiHh, \lwHh, which all score much higher than expected in our case.
+
+Both works then generally agree again regarding which configurations perform the worst, those being \lwUu, \hiUu, \hgUu, and \gbfs, all of which only perform unbiased type and state selection, or no stochastic exploration at all.
+
+Finally, we want to point to GBFS: since this is a deterministic algorithm, and since both works likely used the exact same implementation for it, we assume that the delta in coverage which we record here is mostly attributable to hardware differences. Assuming, therefore, that our coverage numbers are generally about 5-7 higher than theirs by default, it is notable that we nevertheless measure equal or even worse coverage for some configurations: namely, \hgHu and \hiUu show around the same coverage across both works, and \hgUu is slightly worse in our case.
+
+Both with these outliers, as well as with those configurations that scored higher than expected, it would be interesting to investigate if this primarily occurs in specific domains. Unfortunately, since we do not have access to \tcite{tomasz2024}'s per-domain coverage numbers for all configurations, we cannot do this at this time.
 
 \begin{table}[{{TBLPOS}}]
     \small
@@ -66,91 +72,124 @@ We still deem this experiment a success, especially since discrepancies between 
     \begin{tabular}{rrrrrr}
 \textbf{Algorithm}&\textbf{Theirs}&&\textbf{Ours}&&\textbf{Difference}
 \\\hline
-\gbfs&$198.0$&(13)&$199.0$&(13)&$+1$
-\\\hgUu&$224.2$&(10)&$215.2$&(10)&$-9.0$
-\\\hgHu&$265.8$&(3)&$261.8$&(7)&$-4$
-\\\hiUu&$206.4$&(11)&$199.4$&(12)&$-7.0$
-\\\hiUh&&&$201.8$&&
-\\\hiHu&$255.6$&(8)&$273.2$&(4)&$+17.6$
-\\\hiHh&$263.4$&(5)&$281.2$&(3)&$+17.8$
-\\\hiDu&$295.0$&(1)&$296.2$&(1)&$+1.2$
-\\\hiDh&$284.2$&(2)&$287.8$&(2)&$+3.6$
-\\\lwUu&$204.2$&(12)&$207.6$&(11)&$+3.4$
-\\\lwUh&&&$199.8$&&
-\\\lwHu&$256.4$&(7)&$261.2$&(8)&$+4.8$
-\\\lwHh&$254.4$&(9)&$269.0$&(5)&$+14.6$
-\\\lwDu&$258.6$&(6)&$258.8$&(9)&$+0.2$
-\\\lwDh&$263.6$&(4)&$268.4$&(6)&$+4.8$
+\gbfs&$198.0$&(13)&$205.0$&(13)&$+7$
+\\\hgUu&$224.2$&(10)&$221.0$&(10)&$-3.2$
+\\\hgHu&$265.8$&(3)&$265.2$&(8)&$-0.6$
+\\\hiUu&$206.4$&(11)&$205.6$&(12)&$-0.8$
+\\\hiUh&&&$205.2$&&
+\\\hiHu&$255.6$&(8)&$277.6$&(4)&$+22.0$
+\\\hiHh&$263.4$&(5)&$282.8$&(3)&$+19.4$
+\\\hiDu&$295.0$&(1)&$300.8$&(1)&$+5.8$
+\\\hiDh&$284.2$&(2)&$290.6$&(2)&$+6.4$
+\\\lwUu&$204.2$&(12)&$211.6$&(11)&$+7.4$
+\\\lwUh&&&$202.0$&&
+\\\lwHu&$256.4$&(7)&$267.6$&(7)&$+11.2$
+\\\lwHh&$254.4$&(9)&$272.0$&(6)&$+17.6$
+\\\lwDu&$258.6$&(6)&$264.6$&(9)&$+6$
+\\\lwDh&$263.6$&(4)&$272.6$&(5)&$+9$
     \end{tabular}
-    \caption{Overall coverages for \exprepl.}
+    \caption{Todo.}
     \label{tbl:replsum}
 \end{table}
 
-\begin{table}[{{TBLPOS}}]
-    \small
+\begin{figure}[{{TBLPOS}}]
     \centering
-    \begin{tabular}{rrrrrrrr}
-&\textbf{\gbfs}&\textbf{\hgUu}&\textbf{\hgHu}&\textbf{\hiUu}&\textbf{\hiUh}&\textbf{\hiHu}&\textbf{\hiHh}
-\\\hline
-\textbf{barman}&$2.0$&$5.4$&$12.6$&$5.2$&$2.8$&$17.0$&$19.6$
-\\\textbf{childsnack}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$
-\\\textbf{elevators}&$19.0$&$17.4$&$20.0$&$16.6$&$17.0$&$20.0$&$20.0$
-\\\textbf{floortile}&$7.0$&$7.6$&$7.2$&$7.4$&$7.8$&$7.0$&$7.2$
-\\\textbf{ged}&$20.0$&$16.8$&$20.0$&$19.2$&$19.8$&$20.0$&$20.0$
-\\\textbf{hiking}&$20.0$&$20.0$&$20.0$&$19.6$&$19.6$&$20.0$&$20.0$
-\\\textbf{nomystery}&$9.0$&$17.4$&$11.2$&$11.2$&$12.2$&$8.2$&$10.0$
-\\\textbf{openstacks}&$0.0$&$0.0$&$14.0$&$0.0$&$0.0$&$17.6$&$17.6$
-\\\textbf{parcprinter}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$18.2$&$20.0$
-\\\textbf{parking}&$15.0$&$12.2$&$20.0$&$12.0$&$15.2$&$18.2$&$20.0$
-\\\textbf{pegsol}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
-\\\textbf{scanalyzer}&$17.0$&$17.4$&$20.0$&$17.2$&$16.8$&$18.6$&$20.0$
-\\\textbf{sokoban}&$19.0$&$18.0$&$19.0$&$19.0$&$19.0$&$19.0$&$19.0$
-\\\textbf{tetris}&$5.0$&$6.2$&$14.6$&$2.2$&$2.4$&$16.8$&$18.4$
-\\\textbf{thoughtful}&$8.0$&$13.4$&$8.8$&$9.8$&$9.8$&$11.0$&$9.8$
-\\\textbf{tidybot}&$16.0$&$16.8$&$16.2$&$16.2$&$16.0$&$16.2$&$16.6$
-\\\textbf{transport}&$0.0$&$0.0$&$0.4$&$0.0$&$0.0$&$3.4$&$2.8$
-\\\textbf{visitall}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$2.0$&$0.2$
-\\\textbf{woodworking}&$2.0$&$6.6$&$17.8$&$3.8$&$3.4$&$20.0$&$20.0$
-    \end{tabular}
-    \caption{Per-domain coverages for \exprepl.}
-    \label{tbl:repldomains1}
-\end{table}
+    \input{img/plota.pgf}
+    \caption{Comparison of the two data columns.}
+    \label{fig:repltrend}
+\end{figure}
 
-\begin{table}[{{TBLPOS}}]
-    \small
-    \centering
-    \begin{tabular}{rrrrrrrrr}
-&\textbf{\hiDu}&\textbf{\hiDh}&\textbf{\lwUu}&\textbf{\lwUh}&\textbf{\lwHu}&\textbf{\lwHh}&\textbf{\lwDu}&\textbf{\lwDh}
-\\\hline
-\textbf{barman}&$20.0$&$20.0$&$6.8$&$1.4$&$18.8$&$18.2$&$18.4$&$18.4$
-\\\textbf{childsnack}&$0.0$&$0.0$&$0.0$&$0.0$&$0.2$&$0.2$&$0.0$&$0.4$
-\\\textbf{elevators}&$20.0$&$20.0$&$17.0$&$18.2$&$19.6$&$20.0$&$19.8$&$20.0$
-\\\textbf{floortile}&$6.4$&$6.4$&$8.6$&$8.6$&$7.6$&$7.2$&$7.0$&$7.4$
-\\\textbf{ged}&$19.0$&$20.0$&$19.6$&$15.2$&$18.0$&$20.0$&$18.4$&$19.8$
-\\\textbf{hiking}&$20.0$&$20.0$&$19.8$&$19.8$&$20.0$&$20.0$&$20.0$&$20.0$
-\\\textbf{nomystery}&$8.4$&$8.8$&$14.4$&$14.2$&$8.6$&$11.4$&$8.6$&$9.2$
-\\\textbf{openstacks}&$17.2$&$16.6$&$0.0$&$0.0$&$17.2$&$17.0$&$17.2$&$16.8$
-\\\textbf{parcprinter}&$19.0$&$20.0$&$20.0$&$20.0$&$20.0$&$19.8$&$19.4$&$20.0$
-\\\textbf{parking}&$14.6$&$20.0$&$12.4$&$15.4$&$17.2$&$19.8$&$17.2$&$20.0$
-\\\textbf{pegsol}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
-\\\textbf{scanalyzer}&$20.0$&$20.0$&$18.4$&$17.0$&$19.2$&$20.0$&$19.2$&$19.8$
-\\\textbf{sokoban}&$17.0$&$17.0$&$18.6$&$19.0$&$18.0$&$19.0$&$18.0$&$18.0$
-\\\textbf{tetris}&$20.0$&$20.0$&$2.0$&$2.2$&$9.2$&$11.2$&$7.8$&$9.6$
-\\\textbf{thoughtful}&$9.8$&$9.8$&$11.4$&$10.8$&$10.8$&$10.0$&$9.8$&$9.6$
-\\\textbf{tidybot}&$16.8$&$16.8$&$16.4$&$15.8$&$16.6$&$16.4$&$16.4$&$16.2$
-\\\textbf{transport}&$12.8$&$8.4$&$0.0$&$0.0$&$0.6$&$0.8$&$0.4$&$1.2$
-\\\textbf{visitall}&$19.0$&$4.0$&$0.0$&$0.0$&$1.8$&$0.2$&$4.0$&$2.2$
-\\\textbf{woodworking}&$16.2$&$20.0$&$2.2$&$2.2$&$17.8$&$17.8$&$17.2$&$19.8$
-    \end{tabular}
-    \caption{Per-domain coverages for \exprepl.}
-    \label{tbl:repldomains2}
-\end{table}
+% \begin{table}[{{TBLPOS}}]
+%     \small
+%     \centering
+%     \begin{tabular}{rrrrrrrr}
+% &\textbf{\gbfs}&\textbf{\hgUu}&\textbf{\hgHu}&\textbf{\hiUu}&\textbf{\hiUh}&\textbf{\hiHu}&\textbf{\hiHh}
+% \\$\tau_\text{states}$
+% \\\hline
+% \textbf{barman}&$2.0$&$5.4$&$12.4$&$5.4$&$3.0$&$17.0$&$19.6$
+% \\\textbf{childsnack}&$1.0$&$0.0$&$0.0$&$0.2$&$0.0$&$0.0$&$0.0$
+% \\\textbf{elevators}&$19.0$&$18.2$&$20.0$&$18.0$&$17.4$&$20.0$&$20.0$
+% \\\textbf{floortile}&$7.0$&$7.6$&$7.2$&$7.4$&$7.8$&$7.0$&$7.2$
+% \\\textbf{ged}&$20.0$&$16.8$&$20.0$&$19.6$&$19.8$&$20.0$&$20.0$
+% \\\textbf{hiking}&$20.0$&$20.0$&$20.0$&$19.8$&$19.6$&$20.0$&$20.0$
+% \\\textbf{nomystery}&$9.0$&$17.4$&$11.4$&$11.2$&$12.2$&$8.2$&$10.0$
+% \\\textbf{openstacks}&$0.0$&$0.0$&$16.4$&$0.0$&$0.0$&$18.4$&$18.2$
+% \\\textbf{parcprinter}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$18.2$&$20.0$
+% \\\textbf{parking}&$18.0$&$14.2$&$20.0$&$15.0$&$17.0$&$19.4$&$20.0$
+% \\\textbf{pegsol}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
+% \\\textbf{scanalyzer}&$17.0$&$18.0$&$20.0$&$17.4$&$17.0$&$18.6$&$19.8$
+% \\\textbf{sokoban}&$19.0$&$18.0$&$19.0$&$19.0$&$19.0$&$19.0$&$19.0$
+% \\\textbf{tetris}&$7.0$&$7.8$&$15.0$&$2.6$&$2.6$&$18.2$&$19.2$
+% \\\textbf{thoughtful}&$8.0$&$13.8$&$8.8$&$9.8$&$10.0$&$11.0$&$9.8$
+% \\\textbf{tidybot}&$16.0$&$17.0$&$16.6$&$16.4$&$16.4$&$16.6$&$16.8$
+% \\\textbf{transport}&$0.0$&$0.0$&$0.4$&$0.0$&$0.0$&$3.8$&$3.0$
+% \\\textbf{visitall}&$0.0$&$0.0$&$0.0$&$0.0$&$0.0$&$2.2$&$0.2$
+% \\\textbf{woodworking}&$2.0$&$6.8$&$18.0$&$3.8$&$3.4$&$20.0$&$20.0$
+%     \end{tabular}
+%     \caption{Todo.}
+%     \label{tbl:todo}
+% \end{table}
 
-\section{\expbt}
+% \begin{table}[{{TBLPOS}}]
+%     \small
+%     \centering
+%     \begin{tabular}{rrrrrrrrr}
+% &\textbf{\hiDu}&\textbf{\hiDh}&\textbf{\lwUu}&\textbf{\lwUh}&\textbf{\lwHu}&\textbf{\lwHh}&\textbf{\lwDu}&\textbf{\lwDh}
+% \\\hline
+% \textbf{barman}&$20.0$&$20.0$&$6.8$&$1.4$&$18.6$&$18.2$&$18.4$&$18.6$
+% \\\textbf{childsnack}&$0.0$&$0.0$&$0.0$&$0.0$&$0.2$&$0.2$&$0.0$&$0.4$
+% \\\textbf{elevators}&$20.0$&$20.0$&$17.8$&$18.4$&$20.0$&$20.0$&$20.0$&$20.0$
+% \\\textbf{floortile}&$6.4$&$6.4$&$8.6$&$8.6$&$7.6$&$7.2$&$7.0$&$7.6$
+% \\\textbf{ged}&$19.2$&$20.0$&$19.8$&$15.2$&$18.0$&$20.0$&$18.8$&$19.8$
+% \\\textbf{hiking}&$20.0$&$20.0$&$19.8$&$19.8$&$20.0$&$20.0$&$20.0$&$20.0$
+% \\\textbf{nomystery}&$8.4$&$8.8$&$14.4$&$14.4$&$8.6$&$11.4$&$8.6$&$9.2$
+% \\\textbf{openstacks}&$19.0$&$18.2$&$0.0$&$0.0$&$18.6$&$18.4$&$18.6$&$18.2$
+% \\\textbf{parcprinter}&$19.0$&$20.0$&$20.0$&$20.0$&$20.0$&$19.8$&$19.4$&$20.0$
+% \\\textbf{parking}&$15.8$&$20.0$&$13.8$&$16.2$&$19.0$&$20.0$&$18.4$&$20.0$
+% \\\textbf{pegsol}&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$&$20.0$
+% \\\textbf{scanalyzer}&$20.0$&$20.0$&$18.6$&$17.0$&$19.4$&$20.0$&$19.4$&$19.8$
+% \\\textbf{sokoban}&$17.0$&$17.0$&$19.0$&$19.0$&$18.0$&$19.0$&$18.0$&$18.0$
+% \\\textbf{tetris}&$20.0$&$19.8$&$2.4$&$2.6$&$11.0$&$12.0$&$9.8$&$11.0$
+% \\\textbf{thoughtful}&$9.8$&$9.8$&$11.8$&$11.0$&$10.8$&$10.0$&$9.8$&$9.8$
+% \\\textbf{tidybot}&$17.0$&$17.0$&$16.6$&$16.0$&$17.0$&$17.0$&$16.4$&$16.8$
+% \\\textbf{transport}&$13.2$&$9.4$&$0.0$&$0.0$&$1.0$&$0.8$&$0.6$&$1.2$
+% \\\textbf{visitall}&$19.8$&$4.2$&$0.0$&$0.0$&$1.8$&$0.2$&$4.0$&$2.4$
+% \\\textbf{woodworking}&$16.2$&$20.0$&$2.2$&$2.4$&$18.0$&$17.8$&$17.4$&$19.8$
+%     \end{tabular}
+%     \caption{Todo.}
+%     \label{tbl:todo}
+% \end{table}
+
+\section{Softmin Temperatures}
 
 Recall that $\Softmin$ has a temperature parameter $\tau>0$. This parameter allows us to control how strongly biased selection strategies prefer lower values: at low $\tau$, the strategy almost always selects the lowest or one of the lowest values, whereas for larger $\tau$, biased selection behaves more and more like uniform selection. Since we can control $\tau$ independently for type selection as well as state selection, going forward, we will use $\tau_\text{types}$ when discussing the former, and $\tau_\text{states}$ for the latter.
 
 In \expbt, we test those algorithms that use biased type selection with different $\tau_\text{types}$ to see if some variants might benefit from more or less aggressive type biasing. Due to the larger number of runs, we separate this experiment into two sub-experiments.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{types}$&$0.25$&$0.5$&$\mathit{1}$&$2$&$5$&$10$
+\\\hline
+\hgUu&$222.0$&$\boldsymbol{223.0}$&$\mathit{215.2}$&$222.0$&$222.2$&$222.6$
+\\\hgHu&$236.4$&$250.6$&$\mathit{261.8}$&$\boldsymbol{275.6}$&$272.4$&$268.2$
+\\\hiUu&$205.2$&$204.8$&$\mathit{199.4}$&$204.6$&$204.8$&$\boldsymbol{205.4}$
+\\\hiUh&$205.4$&$205.4$&$\mathit{201.8}$&$205.0$&$\boldsymbol{205.6}$&$205.2$
+\\\hiHu&$268.2$&$271.8$&$\mathit{273.2}$&$\boldsymbol{278.2}$&$276.8$&$271.2$
+\\\hiHh&$277.2$&$278.4$&$\mathit{281.2}$&$\boldsymbol{281.8}$&$278.6$&$273.2$
+\\\hiDu&$295.8$&$296.4$&$\mathit{296.2}$&$\boldsymbol{300.0}$&$290.2$&$275.0$
+\\\hiDh&$291.8$&$291.6$&$\mathit{287.8}$&$\boldsymbol{293.6}$&$287.6$&$282.6$
+\\\lwUu&$\boldsymbol{212.6}$&$212.6$&$\mathit{207.6}$&$212.4$&$212.4$&$211.4$
+\\\lwUh&$202.0$&$202.6$&$\mathit{199.8}$&$202.0$&$202.6$&$\boldsymbol{202.8}$
+\\\lwHu&$263.8$&$266.2$&$\mathit{261.2}$&$\boldsymbol{268.4}$&$262.6$&$256.6$
+\\\lwHh&$268.8$&$270.2$&$\mathit{269.0}$&$\boldsymbol{271.0}$&$262.8$&$250.0$
+\\\lwDu&$267.6$&$266.4$&$\mathit{258.8}$&$\boldsymbol{270.0}$&$260.6$&$255.0$
+\\\lwDh&$270.2$&$270.2$&$\mathit{268.4}$&$\boldsymbol{271.4}$&$267.0$&$255.4$
+    \end{tabular}
+    \caption{Todo.}
+    \label{tbl:todo}
+\end{table}
 
 \subsection{\expbtone}
 
@@ -164,7 +203,7 @@ In \expbtone, we only use a subset of the reference suite. We call this the \kw{
 }
 
 In this and all subsequent experiments using the reduced suite, when we compare coverage numbers to those measured in \exprepl, we adjust the latter coverages by subtracting the coverages achieved in the omitted domains per each configuration.
- 
+
 \expbtone\ only tests a subset of the algorithms: namely, we exclude all variants that use the \Utss type selection strategy, since this strategy does not use $\Softmin$, and we only include variants that use the \Usss state selection strategy. The latter assumes that the type and state selection strategies affect an algorithm's performance independently of each other: we have no reason to assume this to be true and thus acknowledge this as a potential gap in our methodology.
 
 %Address this assumption.
@@ -395,6 +434,8 @@ $\tau_\text{states}$&$20$&$10$&$5$&$2$&$1$
 \end{table}
 
 We conclude this section with some closing remarks regarding both \expbt\ and \expst. In both experiments, raising the $\Softmin$ temperature either shows no noticeable effect or it shows consistent worsening of the coverage. This aligns with our expectations, since raising the temperature pushes biased strategies toward behaving like uniform strategies, and uniform strategies most often perform similar to or worse than biased ones (with the exception of \hiDu, which remains a mystery), as we observed in \exprepl.
+
+we cannot rule out that different combinations of these could produce stronger improvements, particularly because exp a suggests that type sel and state sel are not independent of each other
 
 %Need to take a closer look at how the results at lower temperatures could be explained. Also need to check for differences in per-domain coverages.
 
