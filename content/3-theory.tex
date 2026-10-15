@@ -1,4 +1,4 @@
-\chapter{Main Part}
+\chapter{Main Part (Untitled)}
 
 In this chapter, we explore the qualities of a hypothetical type system based on the BTS, as well as explaining why such a type system is not practical. We then describe a generalization of transition systems such as the BTS, which we use to define two new transition systems that approximate the BTS. This finally allows us to specify two new type systems, based on the new transition systems, that approximate a type system based on the BTS.
 
@@ -63,6 +63,7 @@ In particular, we define the \kw{heuristic improvement type system} HI as follow
 The \kw{low-water mark type system} LW is defined similarly, except that we use $\Lw_h$ in place of $h$, with one notable difference: whenever we encounter a low-water mark progress state, instead of adding all improving successors to a single new type, we create one new type for every distinct improving low-water mark value among the successors. This is important, because if we added all improving successors to a single new type, that type might span states with different levels of low-water mark progress.
 
 \section{Type Trees}
+\label{sec:typetrees}
 
 In both HI and LW, each type $T$ except for the type of $s_I$, the ``root type'', has a \kw{parent type}, which is the type of the state whose expansion caused the creation of $T$. This means that every type $T$ has a lineage, that is, a sequence of types that leads from the root type to $T$.
 

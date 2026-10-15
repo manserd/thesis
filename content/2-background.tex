@@ -34,7 +34,7 @@ Consider a planning task $\Pi=\langle V,\Dom,I,G,A\rangle$. The \kw{state space 
 
 Some additional definitions are helpful.
 
-A \kw{path} from state $s_\text{start}$ to state $s_\text{end}$ is a tuple $\pi=\langle t_1,\ldots,t_n\rangle$, with $n\geq 1$, where $\Src(t_1)=s_\text{start}$, $\Dest(t_n)=s_\text{end}$, and $\Dest(t_i)=\Src(t_{i+1})$ for all $1\leq i<n$. For $s_\text{start}=s_\text{end}$, $\langle\langle s_\text{start},0,s_\text{start}\rangle\rangle$ is also a path. We define the \kw{path cost} of $\pi$ as $\Cost(\pi)=\sum_{i=1}^n\Cost(t_i)$. When we use $s\in\pi$, we mean $s\in\bigcup_{1\leq i\leq n}\{\Src(t_i),\Dest(t_i)\}$. We say a state $s'$ is \kw{reachable} from another state $s$ if there exists some path from $s$ to $s'$.
+A \kw{path} from state $s_\text{start}$ to state $s_\text{end}$ is a tuple $\pi=\langle t_1,\ldots,t_n\rangle$, with $n\geq 1$, where $\Src(t_1)=s_\text{start}$, $\Dest(t_n)=s_\text{end}$, and $\Dest(t_i)=\Src(t_{i+1})$ for all $1\leq i<n$. For $s_\text{start}=s_\text{end}$, $\langle\langle s_\text{start},0,s_\text{start}\rangle\rangle$ is also a path. We define the \kw{path cost} of $\pi$ as $\Cost(\pi)=\sum_{i=1}^n\Cost(t_i)$, and the \kw{path length} of $\pi$ is $\Length(\pi)=(\sum_{i=1}^n1)-1$. When we use $s\in\pi$, we mean $s\in\bigcup_{1\leq i\leq n}\{\Src(t_i),\Dest(t_i)\}$. We say a state $s'$ is \kw{reachable} from another state $s$ if there exists some path from $s$ to $s'$.
 
 We define a \kw{solution from} $s\in S$ as a path $\pi$ from $s$ to any goal state $s_G\in S_G$, and a \kw{solution} is a solution from $s_I$. The \kw{set of solutions from} $s\in S$ is $P(s)=\{\pi\mid\pi$ is a solution from $s\}$.
 

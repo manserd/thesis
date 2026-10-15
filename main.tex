@@ -44,13 +44,23 @@
 
 \begin{document}
 
+\pagenumbering{gobble}
+
 \input{build/_front.tex}
 
 % \tableofcontents
+
+\cleardoublepage
+\pagenumbering{arabic}
 
 \input{build/_center.tex}
 
 \bibliographystyle{apalike}
 \bibliography{main}
+
+\clearpage
+\pagenumbering{gobble}
+
+\input{build/_back.tex}
 
 \end{document}
