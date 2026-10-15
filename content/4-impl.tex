@@ -1,17 +1,17 @@
 \chapter{Implementation}
 
-For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006,fd}, release 24.06.1. The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \Cref{alg:sss}.
+For testing the new type systems and comparing their performance to established algorithms, all variants were implemented as open lists in the \kw{Fast Downward} planning system \pcite{helmert2006}, release 24.06.1. The basic search algorithm which these open lists fit into is Fast Downward's existing eager search, which functionally matches \Cref{alg:sss}.
 
 \section{Open List}
 \label{sec:impl-ol}
 
 The HI and LW type systems have different architectural requirements when compared to the HG type systems. In particular, the two new type systems are \kw{path-dependent}, in that the type of a given state depends on that state's parent's type. The existing implementation of a type-based open list in Fast Downward was not designed with path-dependent type systems in mind. It also does not allow for biased selection.
 
-While the first issue can be worked around within the constraints of the existing implementation, the second one cannot. Therefore, we opted to forego the existing type-based open list and build a new one from scratch. In this, we also decided to extend Fast Downward's generic open list interface by adding a way for a search algorithm to inform its open list that a new expansion was about to begin. This was done so path-dependent type systems could easily track the parent state for subsequent insertions.
+While the first issue can be worked around within the constraints of the existing implementation, the second one cannot. Therefore, we opted to forego the existing type-based open list and build a new one from scratch. We also extended Fast Downward's generic open list interface by adding a way for a search algorithm to inform its open list that a new expansion was about to begin. This was done so path-dependent type systems could easily track the parent state for subsequent insertions.
 
 \section{Buckets}
 
-Since each combination of type selection strategy and state selection strategy has different requirements in terms of the data structures, we decided the create bespoke implementations for each combination. The basic idea is always the same: a bucket is a set of states, and the open list maintains a set of buckets. Buckets are created when they are needed, and deleted as soon as they are empty. Below we outline some non-trivial aspects of the implementation that apply to all or some of the combinations.
+Since each combination of type selection strategy and state selection strategy has different requirements in terms of the data structures, we decided the create bespoke implementations for each combination. The basic idea is always the same: a bucket is a collection of states, and the open list maintains a collection of buckets. Buckets are created when they are needed, and deleted as soon as they are empty. Below we outline some non-trivial aspects of the implementation that apply to all or some of the combinations.
 
 Both within a single bucket, and across all buckets maintained by an open list, a reocurring pattern is the need for a data structure that allows constant-time insertion, lookup, and random removal of items. This is achieved by pairing a C++ \texttt{std::vector} with a \texttt{std::unordered\textunderscore map}. The former holds the actual items (or sometimes pointers to items) and enables constant-time insertion (via \texttt{push\textunderscore back}) and constant-time random removal (by generating a random index into the vector, and then removing the item at that position using typical swap-and-pop). The latter maps an item key to the item's position within the vector, to enable constant-time lookup.
 
@@ -21,7 +21,7 @@ We addressed this as follows: first, we added another \texttt{std::unordered\tex
 
 Biased selection works as follows (recall $\Softmin$ from \Cref{sec:hg}): let $B$ refer to the set of distinct bias values, let $\beta=\min_{b'\in B}b'$, let $w=\sum_{b'\in B}\Softmin(b'-\beta)$, and let $x\in[0,w)$ randomly generated. Now let $i$ refer to a one-based index into $B$ (for this, assume $B$ has some fixed order), and initialize $i\ceq 1$. Then, for each $b'\in B$: if $x<\Softmin(b'-\beta)$, stop; otherwise, let $x\ceq x-w$, $i\ceq i+1$, and repeat. Finally, with $b$ the bias value at index $i$ in $B$, select some item uniformly at random from the vector that $b$ maps to in \texttt{group\textunderscore by\textunderscore bias}. We use $b'-\beta$ to avoid numerical problems with large $b'$.
 
-Note that changing the bias of an item (which can happen in the \Htss type selection strategy, where the bucket bias is given by the min-h type property) requires us to find and remove the item position in the vector that \texttt{group\textunderscore by\textunderscore bias} points to for the stale bias. To avoid this walk, we additionally store alongside each item its position within its current \texttt{group\textunderscore by\textunderscore bias} vector.
+Note that changing the bias of an item (which can happen in the \Htss type selection strategy, where the bucket bias is given by the min-h type property) requires us to find and remove the item position in the vector that \texttt{group\textunderscore by\textunderscore bias} points to for the stale bias. To avoid a walk over this vector, we additionally store alongside each item its position within its current \texttt{group\textunderscore by\textunderscore bias} vector.
 
 \section{Type Systems}
 

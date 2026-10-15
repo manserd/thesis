@@ -6,20 +6,22 @@ This chapter describes greedy best-first search and its problems, type-based sto
 
 \kw{Automated planning} is a branch of Artificial Intelligence research concerned with automated problem-solving. Given some formal representation of an environment, the objective is to find a sequence of actions which transforms the environment from some initial configuration to some desired end configuration.
 
-\section{Planning Tasks}
+% \section{Planning Tasks}
 
 To reason about an automated planning problem, we want a formal representation of the environment in which the problem exists. One way to achieve this is by describing such an environment via a finite set of ``properties'', such that every configuration of the environment is represented by some assignment of values to these properties. We call these properties \kw{state variables}, and we use $V$ to refer to the finite set of all state variables used to model an environment, with each $v\in V$ having a finite, non-empty \kw{domain} $\Dom(v)$ of possible values.
 
 To express ``requirements'' or ``changes'', we use a \kw{partial assignment}, which is a function $l$ defined on some \kw{variables} $\Vars(l)\subseteq V$, with $l(v)\in\Dom(v)$ for all $v\in\Vars(l)$; when a partial assignment $s$ defines all variables, that is $\Vars(s)=V$, we call it a \kw{state}. A state $s$ \kw{satisfies} a partial assignment $l$ if $s(v)=l(v)$ for all $v\in\Vars(l)$, which we sometimes write as $s\models l$.
 
-An \kw{action} represents a change in the environment, and is a tuple $o=\langle\Pre_o,g_o,\Eff_o\rangle$, with $\Pre_o$ a partial assignment called the \kw{preconditions} of $o$, $g_o\in\bbR_0$ the \kw{action cost} of $o$, and $\Eff_o$ a partial assignment called the \kw{effects} of $o$. An action $o$ is \kw{applicable} in a state $s$ if $s$ satisfies $\Pre_o$. \kw{Applying} an applicable action $o$ in a state $s$ produces the state $s[o]$ with $$s[o](v)=\begin{cases}\Eff_o(v)&\text{if $v\in\Vars(\Eff_o)$,}\\s(v)&\text{otherwise,}\end{cases}$$ for all $v\in V$.
+An \kw{action} represents a change in the environment, and is a tuple $o=\langle\Pre_o,g_o,\Eff_o\rangle$, where $\Pre_o$ is a partial assignment called the \kw{preconditions} of $o$, $g_o\in\bbR_0$ is the \kw{action cost} of $o$, and $\Eff_o$ is a partial assignment called the \kw{effects} of $o$. An action $o$ is \kw{applicable} in a state $s$ if $s$ satisfies $\Pre_o$. \kw{Applying} an applicable action $o$ in a state $s$ produces the state $s[o]$ with $$s[o](v)=\begin{cases}\Eff_o(v)&\text{if $v\in\Vars(\Eff_o)$,}\\s(v)&\text{otherwise,}\end{cases}$$ for all $v\in V$.
 
-Using these building blocks, we can then assemble a full formal representation of an environment. A \kw{SAS$^+$ planning task}, henceforth just \kw{planning task}, is a tuple $$\Pi=\langle V,\Dom,I,G,A\rangle,$$ with $I$ a state called the \kw{initial state}, $G$ a partial assignment called the \kw{goal}, and $A$ a finite set of \kw{actions}.
+Using these building blocks, we can then assemble a full formal representation of an environment. A \kw{SAS$^+$ planning task}, or just \kw{planning task}, is a tuple $$\Pi=\langle V,\Dom,I,G,A\rangle,$$ where $I$ is a state called the \kw{initial state}, $G$ a partial assignment called the \kw{goal}, and $A$ a finite set of \kw{actions}.
 
-\section{Induced State Spaces}
-\label{sec:ss}
+% \section{Induced State Spaces}
+% \label{sec:ss}
 
-If we picture states as ``points in space'', and actions as ``roads'' between them, we naturally arrive at an intuition for ``exploring a space of states''. It can be helpful to represent a planning task in a way that more closely resembles this perspective.
+\section{State Space Search}
+
+If we picture states as ``points in space'', and actions as ``roads'' between them, we naturally arrive at an intuition for ``exploring a space of states'': this is the fundamental idea of how we search solutions to a planning task, and representing a task in a way that matches this perspective provides us with an interface against which we can define algorithms that automate this search.
 
 Consider a planning task $\Pi=\langle V,\Dom,I,G,A\rangle$. The \kw{state space induced by $\Pi$}, $\calS(\Pi)$, is a tuple $\langle S,\Succ,s_I,S_G\rangle$ with components defined as follows:
 
@@ -36,11 +38,11 @@ A \kw{path} from state $s_\text{start}$ to state $s_\text{end}$ is a tuple $\pi=
 
 We define a \kw{solution from} $s\in S$ as a path $\pi$ from $s$ to any goal state $s_G\in S_G$, and a \kw{solution} is a solution from $s_I$. The \kw{set of solutions from} $s\in S$ is $P(s)=\{\pi\mid\pi$ is a solution from $s\}$.
 
-Finally, the \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\pi\in P(s)}\Cost(\pi)$, with $h^*(s)=\infty$ if $P(s)=\emptyset$.
+Also, the \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\pi\in P(s)}\Cost(\pi)$, with $h^*(s)=\infty$ if $P(s)=\emptyset$.
 
-\section{State Space Search}
+% \section{State Space Search}
 
-Recall the idea of ``exploring a space'' that we hinted at in \Cref{sec:ss}: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
+Recall the idea of ``exploring a space'' that we hinted at before: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
 
 \begin{algorithm}[H]
     \caption{State space search}
@@ -78,14 +80,17 @@ An \kw{open list} $O$ is a container to which we can add a state $s$ via $O.\Add
 
 % "In subsequent sections, the behavior of the open list will be the characteristic by which we differentiate between search algorithms." I might want something like this if I want to justify why we chose this perspective.
 
-\section{Best-First Search}
+% \section{Best-First Search}
+
+\section{Greedy Best-First Search}
+\label{sec:gbfs}
 
 The simplest form of state space search is \kw{random search}, which removes states from the open list indiscriminantly. Formally, we can describe this behavior using an \kw{unbiased open list}, which is an open list $O$ where $O.\Remove()$ removes a state selected uniformly at random. As a state space grows past a trivial size, the number of states that a random search might consider grows rapidly, quickly rendering this approach impractical.
 
 \kw{Best-first search} makes state selection more ``deliberate'' by introducing a mechanism that allows us to prioritize some states over others. This is achieved using an \kw{evaluation function}: for a state space $\calS=\langle S,\Succ,s_I,S_G\rangle$, an \kw{evaluation function} is a function $$f:S\ar\bbR_0^+\cup\{\infty\}$$ that gives the ``priority'' of each state, with lower values indicating higher priority. Using this we formalize the open list used in best-first search: a \kw{best-first open list sorted by evaluation function $f$} is an open list $O$ where $$O.\Remove()={\arg\min}_{s\in O}f(s),$$ with ties broken arbitrarily.
 
-\section{Greedy Best-First Search}
-\label{sec:gbfs}
+% \section{Greedy Best-First Search}
+% \label{sec:gbfs}
 
 The \kw{greedy best-first search}[GBFS] algorithm \pcite{doran1966}[whole paper] is an instance of best-first search that uses an evaluation function that gives an estimate of the goal distance for any state. Such a function is called a \kw{heuristic}: for a state space $\calS=\langle S,\Succ,s_I,S_G\rangle$, a \kw{heuristic} is a function $$h:S\ar\bbR_0^+\cup\{\infty\}$$ that maps each state $s\in S$ to an estimate of its goal distance $h(s)$.
 
@@ -154,7 +159,7 @@ While \tcite{xie2014b}[p. 6, new section] tested multiple type systems, one part
 
 Now, while we have said that a heuristic can sometimes be misleading, we still generally assume that following it is preferable to ignoring it completely. Following that logic, we might want a type-based open list that places a bit more weight on states with smaller heuristic values, in such a way that those states are generally more likely to be selected, but that still allows for occasional selections that go entirely against the advice of the heuristic. This was proposed by \tcite{kuroiwa2022}[whole paper], who then introduced \kw{Softmin-Type} as a variant of \hgUu that prefers types with lower minimal heuristic values.
 
-We will generalize this idea to be able to describe a type selection strategy that can use any value, not just the heuristic values of the states, to determine the ``weight'' of a type. This is done in anticipation of future variants of Type-GBFS that we will discuss later. We first define the idea of a \kw{type property}: a \kw{type property} is a function $\delta:\calT\ar\bbR\cup\{\infty\}$ defined for all types $\calT$ induced by some type system, and the \kw{min-h type property} is the type property where, for any type $T$ induced by some type system, $\MinH(T)=\min_{s\in T}h(s)$, with $h$ the heuristic.
+We will generalize this idea to be able to describe a type selection strategy that can use any value, not just the heuristic values of the states, to determine the ``weight'' of a type. This is done in anticipation of future variants of Type-GBFS that we will discuss later. We first define the idea of a \kw{type property}: a \kw{type property} is a function $\delta:\calT\ar\bbR\cup\{\infty\}$ defined for all types $\calT$ induced by some type system, and the \kw{min-h type property} is the type property where, for any type $T$ induced by some type system, $\MinH(T)=\min_{s\in T}h(s)$, where $h$ is the heuristic.
 
 A \kw{biased type selection strategy} biased by type property $\delta$ is a type selection strategy that selects a type from among the \kw{qualifying types} uniformly at random, where the \kw{qualifying types} are all those types $T$ in the open list with $\delta(T)=b$, and $b$ is chosen from the set $B$ of all distinct $\delta(T)$ with the probability of choosing each $b'\in B$ given by $$\Softmin(b')=\frac{\exp(-b'/\tau)}{\sum_{b''\in B}\exp(-b''/\tau)},$$ with $\tau>0$. The \kw{\Htss type selection strategy} is the biased type selection strategy biased by the min-h type property. Thus, using our notation, Softmin-Type is \kw{\hgHu}.
 
@@ -179,7 +184,7 @@ Next, for any $s_\text{root}\in S$, let $\calI$ refer to the set of states $s_\t
 
 Then, for that same $s_\text{root}$, let $E$ refer to the set of progress states $s_\text{exit}$ with $h(s_\text{exit})\leq\Level(s_\text{root})$ that are successors of $s_\text{root}$ or any $s_\text{inner}\in\calI$. Intuitively, the exit states are all the states that lead from the current ``level of progress'' to the next ``level of progress''.
 
-Together, these sets form a single tuple that describes an entire ``level of progress'', which we call a \kw{bench}: the \kw{bench} for $s_\text{root}$, $\calB(s_\text{root})$, is a tuple $\langle\calI,E\rangle$ with $\calI$ the \kw{inner states} and $E$ the \kw{exit states}. We may use $\calI(\calB(s_\text{root}))$ and $E(\calB(s_\text{root}))$ to refer to the inner and exit states of $\calB(s_\text{root})$, respectively.
+Together, these sets form a single tuple that describes an entire ``level of progress'', which we call a \kw{bench}: the \kw{bench} for $s_\text{root}$, $\calB(s_\text{root})$, is a tuple $\langle\calI,E\rangle$ where $\calI$ is the set of \kw{inner states} and $E$ is the set of \kw{exit states}. We may use $\calI(\calB(s_\text{root}))$ and $E(\calB(s_\text{root}))$ to refer to the inner and exit states of $\calB(s_\text{root})$, respectively.
 
 Finally, a \kw{bench transition system} $\Bts(\calS,h)$ captures all benches for a given state space $\calS=\langle S,\Succ,s_I,S_G\rangle$ and heuristic $h$: $\Bts(\calS,h)$ is a directed graph $\langle \calV,\calE\rangle$ that is defined inductively as follows:
 \begin{enumerate}
