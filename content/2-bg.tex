@@ -1,6 +1,6 @@
 \chapter{Background}
 
-This chapter describes greedy best-first search and its problems, type-based stochastic exploration as a way to mitigate these problems, and the bench transition system as the basis of the ideas we will present in the next chapter. We mostly follow \tcite{tomasz2024}[background] in notation and definitions, with some exceptions made in the interest of clarity.
+This chapter describes greedy best-first search and its problems, type-based stochastic exploration as a way to mitigate these problems, and the bench transition system as the basis of the ideas we will describe in the next chapter. We mostly follow \tcite{tomasz2024}[background] in notation and definitions, with some exceptions made in the interest of clarity.
 
 \section{Automated Planning}
 
@@ -12,7 +12,7 @@ To reason about an automated planning problem, we want a formal representation o
 
 To express ``requirements'' or ``changes'', we use a \kw{partial assignment}, which is a function $l$ defined on some \kw{variables} $\Vars(l)\subseteq V$, with $l(v)\in\Dom(v)$ for all $v\in\Vars(l)$; when a partial assignment $s$ defines all variables, that is $\Vars(s)=V$, we call it a \kw{state}. A state $s$ \kw{satisfies} a partial assignment $l$ if $s(v)=l(v)$ for all $v\in\Vars(l)$, which we sometimes write as $s\models l$.
 
-An \kw{action} represents a change in the environment, and is a tuple $o=\langle\Pre_o,g_o,\Eff_o\rangle$, where $\Pre_o$ is a partial assignment called the \kw{preconditions} of $o$, $g_o\in\bbR_0$ is the \kw{action cost} of $o$, and $\Eff_o$ is a partial assignment called the \kw{effects} of $o$. An action $o$ is \kw{applicable} in a state $s$ if $s$ satisfies $\Pre_o$. \kw{Applying} an applicable action $o$ in a state $s$ produces the state $s[o]$ with $$s[o](v)=\begin{cases}\Eff_o(v)&\text{if $v\in\Vars(\Eff_o)$,}\\s(v)&\text{otherwise,}\end{cases}$$ for all $v\in V$.
+An \kw{action} represents a change in the environment, and is a tuple $o=\langle\Pre_o,c_o,\Eff_o\rangle$, where $\Pre_o$ is a partial assignment called the \kw{preconditions} of $o$, $c_o\in\bbR_0$ is the \kw{action cost} of $o$, and $\Eff_o$ is a partial assignment called the \kw{effects} of $o$. An action $o$ is \kw{applicable} in a state $s$ if $s$ satisfies $\Pre_o$. \kw{Applying} an applicable action $o$ in a state $s$ produces the state $s[o]$ with $$s[o](v)=\begin{cases}\Eff_o(v)&\text{if $v\in\Vars(\Eff_o)$,}\\s(v)&\text{otherwise,}\end{cases}$$ for all $v\in V$.
 
 Using these building blocks, we can then assemble a full formal representation of an environment. A \kw{SAS$^+$ planning task}, or just \kw{planning task}, is a tuple $$\Pi=\langle V,\Dom,I,G,A\rangle,$$ where $I$ is a state called the \kw{initial state}, $G$ a partial assignment called the \kw{goal}, and $A$ a finite set of \kw{actions}.
 
@@ -21,13 +21,13 @@ Using these building blocks, we can then assemble a full formal representation o
 
 \section{State Space Search}
 
-If we picture states as ``points in space'', and actions as ``roads'' between them, we naturally arrive at an intuition for ``exploring a space of states'': this is the fundamental idea of how we search solutions to a planning task, and representing a task in a way that matches this perspective provides us with an interface against which we can define algorithms that automate this search.
+If we picture states as ``points in space'', and actions as ``roads'' between them, we naturally arrive at an intuition for ``exploring a space of states'': while this is not an exact analogy, it nevertheless illustrates the fundamental idea of how we search solutions to a planning task, and representing a task in a way that aligns with this perspective provides us with an interface against which we can define algorithms that automate this search.
 
 Consider a planning task $\Pi=\langle V,\Dom,I,G,A\rangle$. The \kw{state space induced by $\Pi$}, $\calS(\Pi)$, is a tuple $\langle S,\Succ,s_I,S_G\rangle$ with components defined as follows:
 
 \begin{itemize}
     \item The finite set of \kw{states} $S$ is the set of all possible states: $$S=\{s\mid s\text{ is a state over }V\text{ and }\Dom\}.$$
-    \item Consider a \kw{transition} a triple $t=\langle s,g,s'\rangle$, with state $s$ the \kw{source} $\Src(t)$, $g\in\bbR_0$ the \kw{transition cost} $\Cost(t)$, and state $s'$ the \kw{destination} $\Dest(t)$. The \kw{successor generator function} $\Succ:S\ar\calP(S\times\bbR_0\times S)$ gives all possible transitions for each state $s$: $$\Succ(s)=\{\langle s,g_o,s[o]\rangle\mid o\in A, o\text{ applicable in }s\}.$$ Note that with $s$ and $s'$ states, we may use $s'\in\Succ(s)$ as shorthand for $\langle s,g,s'\rangle\in\Succ(s)$ with arbitrary transition cost $g$.
+    \item Consider a \kw{transition} a triple $t=\langle s,c,s'\rangle$, with state $s$ the \kw{source} $\Src(t)$, $c\in\bbR_0$ the \kw{transition cost} $\Cost(t)$, and state $s'$ the \kw{destination} $\Dest(t)$. The \kw{successor generator function} $\Succ:S\ar\calP(S\times\bbR_0\times S)$ gives all possible transitions for each state $s$: $$\Succ(s)=\{\langle s,c_o,s[o]\rangle\mid o\in A, o\text{ applicable in }s\}.$$ Note that with $s$ and $s'$ states, we may use $s'\in\Succ(s)$ as shorthand for $\langle s,c,s'\rangle\in\Succ(s)$ with arbitrary transition cost $c$.
     \item The \kw{initial state} $s_I$ is $I$.
     \item A \kw{goal state} is any state that satisfies $G$. The set of \kw{goal states} $S_G$ contains all those states: $$S_G=\{s\in S\mid s\text{ is a goal state}\}.$$
 \end{itemize}
@@ -36,13 +36,11 @@ Some additional definitions are helpful.
 
 A \kw{path} from state $s_\text{start}$ to state $s_\text{end}$ is a tuple $\pi=\langle t_1,\ldots,t_n\rangle$, with $n\geq 1$, where $\Src(t_1)=s_\text{start}$, $\Dest(t_n)=s_\text{end}$, and $\Dest(t_i)=\Src(t_{i+1})$ for all $1\leq i<n$. For $s_\text{start}=s_\text{end}$, $\langle\langle s_\text{start},0,s_\text{start}\rangle\rangle$ is also a path. We define the \kw{path cost} of $\pi$ as $\Cost(\pi)=\sum_{i=1}^n\Cost(t_i)$, and the \kw{path length} of $\pi$ is $\Length(\pi)=(\sum_{i=1}^n1)-1$. When we use $s\in\pi$, we mean $s\in\bigcup_{1\leq i\leq n}\{\Src(t_i),\Dest(t_i)\}$. We say a state $s'$ is \kw{reachable} from another state $s$ if there exists some path from $s$ to $s'$.
 
-We define a \kw{solution from} $s\in S$ as a path $\pi$ from $s$ to any goal state $s_G\in S_G$, and a \kw{solution} is a solution from $s_I$. The \kw{set of solutions from} $s\in S$ is $P(s)=\{\pi\mid\pi$ is a solution from $s\}$.
-
-Also, the \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\pi\in P(s)}\Cost(\pi)$, with $h^*(s)=\infty$ if $P(s)=\emptyset$.
+We define a \kw{solution from} $s\in S$ as a path $\pi$ from $s$ to any goal state $s_G\in S_G$, and a \kw{solution} is a solution from $s_I$. The \kw{set of solutions from} $s\in S$ is $P(s)=\{\pi\mid\pi$ is a solution from $s\}$. Also, the \kw{goal distance} of $s\in S$ is $h^*(s)=\min_{\pi\in P(s)}\Cost(\pi)$, with $h^*(s)=\infty$ if $P(s)=\emptyset$.
 
 % \section{State Space Search}
 
-Recall the idea of ``exploring a space'' that we hinted at before: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
+Returning to the idea of ``exploring a space'' that we hinted at before: a \kw{state space search algorithm} (or simply \kw{search algorithm}) does just that, exploring a state space, in search of a solution. \Cref{alg:sss} shows one way such a search algorithm might be implemented.
 
 \begin{algorithm}[H]
     \caption{State space search}
@@ -68,7 +66,6 @@ Recall the idea of ``exploring a space'' that we hinted at before: a \kw{state s
         \State \Return \textbf{unsolvable}
     \end{algorithmic}
 \end{algorithm}
-% Maybe I should point out that this algorithm is technically not able to construct the solution path at the end. Also note that I removed ``dead-end pruning'' for clarity.
 
 A few things should be noted here. First, \Cref{alg:sss} is what we consider a \kw{complete} search algorithm: this refers to the fact that this implementation guarantees to find a solution if one exists, and terminates otherwise.
 
@@ -77,8 +74,6 @@ Second, throughout this work, we will exclusively concern ourselves with \kw{sat
 Finally, we want to point to a feature of our \Cref{alg:sss} that will form the basis of much of our discussion going forward: search algorithms like the one shown here require a mechanism that can track which states the algorithm has encountered but not yet explored, and which can tell the algorithm which state to explore next. Such constructs are called \kw{open lists}:
 
 An \kw{open list} $O$ is a container to which we can add a state $s$ via $O.\Add(s)$, from which we can remove (and receive) an arbitrary state using $O.\Remove()$, and for which we can check whether it is empty via $O.\Empty()$. We may also use $s\in O$ to refer to any state $s$ contained in open list $O$.
-
-% "In subsequent sections, the behavior of the open list will be the characteristic by which we differentiate between search algorithms." I might want something like this if I want to justify why we chose this perspective.
 
 % \section{Best-First Search}
 
@@ -124,9 +119,9 @@ One way of adding exploration to a search algorithm is \kw{stochastic exploratio
 
 \kw{$\epsilon$-GBFS} \pcite{valenzano2014}[start of section 2] adds stochastic exploration to GBFS: whenever a state must be selected, the algorithm either performs the same way as regular GBFS would, or, with some probability $\epsilon$, selects a state from the open list uniformly at random.
 
-Thus formally, $\epsilon$-GBFS uses an open list $O$ that itself switches between two open lists $O_1$ and $O_2$, where $O_1$ is an unbiased open list (as in random search) and $O_2$ is a best-first open list sorted by some heuristic $h$ (as in regular GBFS). For any state $s$, $O.\Add(s)$ then implies $O_1.\Add(s)$ and $O_2.\Add(s)$, $O.\Remove()$ implies $O_1.\Remove()$ with some fixed probability $\epsilon\in(0,1)$ or $O_2.\Remove()$ otherwise, and $O.\Empty()$ is true if both $O_1.\Empty()$ and $O_2.\Empty()$ are true.
+% Thus formally, $\epsilon$-GBFS uses an open list $O$ that itself switches between two open lists $O_1$ and $O_2$, where $O_1$ is an unbiased open list (as in random search) and $O_2$ is a best-first open list sorted by some heuristic $h$ (as in regular GBFS). For any state $s$, $O.\Add(s)$ then implies $O_1.\Add(s)$ and $O_2.\Add(s)$, $O.\Remove()$ implies $O_1.\Remove()$ with some fixed probability $\epsilon\in(0,1)$ or $O_2.\Remove()$ otherwise, and $O.\Empty()$ is true if both $O_1.\Empty()$ and $O_2.\Empty()$ are true.
 
-While \tcite{valenzano2014}[p. 2, left bottom \P] have shown $\epsilon$-GBFS to improve the performance of GBFS, the algorithm also has a problem: consider a situation where $\epsilon$-GBFS' open list is dominated by states within a single UHR. To illustrate how this might happen: one intra-UHR state might have several successors in the same UHR, which themselves have several successors in the UHR, and so on. In such a scenario, each expansion of an intra-UHR state adds several new intra-UHR states to the open list, while the number of states outside the region remains the same, quickly leading to an overrepresentation of states from this UHR in the open list. Since $\epsilon$-GBFS selects exploratory states uniformly at random, this selection will be heavily biased towards states within this one UHR, making it hard for the algorithm to escape that region.
+While \tcite{valenzano2014}[p. 2, left bottom \P] have shown $\epsilon$-GBFS to improve the performance of GBFS, the algorithm also has a problem: consider a situation where $\epsilon$-GBFS' open list is dominated by states within a single UHR. To illustrate how this might happen: one intra-UHR state might have several successors in the same UHR, which could themselves have several successors in the UHR, and so on. In such a scenario, each expansion of an intra-UHR state adds several new intra-UHR states to the open list, while the number of states outside the region remains the same, quickly leading to an overrepresentation of states from this UHR in the open list. Since $\epsilon$-GBFS selects exploratory states uniformly at random, this selection will be heavily biased towards states within this one UHR, making it hard for the algorithm to escape that region.
 
 % Let $\calS$ be some state space $\langle S,\Succ,s_I,S_G\rangle$. An \kw{open list selector function} is a function $q:\{O_1,\ldots,O_n\}\ar\{1,\ldots,n\}$, with $O_i$ an open list for all $1\leq i\leq n$. The nature of how a queue selector function decides which result to produce will be specified when such a function is instantiated.
 
@@ -142,7 +137,7 @@ While \tcite{valenzano2014}[p. 2, left bottom \P] have shown $\epsilon$-GBFS to 
 
 We use a \kw{type system} to define what it means for two states to be considered ``similar'': more formally, this dictates the rules by which the states in the open list are disjointly partitioned into \kw{types}, where a \kw{type} is a subset of the states in the open list. A \kw{type selection strategy} then dictates how a type is selected, and a \kw{state selection strategy} dictates how a state is selected for removal from the previously selected type.
 
-Using these constructs we define a new open list: a \kw{type-based open list} following type system $\bbT$, type selection strategy \Tss{t}, and state selection strategy \Sss{s}, is an open list whose states are disjointly partitioned into types according to $\bbT$, and where $O.\Remove()$ first selects a type according to \Tss{t}, and then selects and removes a state from that type according to \Sss{s}.
+Using these constructs we define a new open list: a \kw{type-based open list} following type system $\bbT$, type selection strategy \Tss{t}, and state selection strategy \Sss{s}, $O$, is an open list whose states are disjointly partitioned into types according to $\bbT$, and where $O.\Remove()$ first selects a type according to \Tss{t}, and then selects and removes a state from that type according to \Sss{s}.
 
 Unlike $\epsilon$-GBFS, Type-GBFS as defined by \tcite{xie2014b}[p. 3, new section] does not use probability to select between exploitation and exploration: instead, it alternates between the two modes on every state selection. Formally, \kw{Type-GBFS using type-based open list $O_1$} uses an open list $O$ that itself switches between $O_1$ and a best-first open list sorted by some heuristic $h$ (as in regular GBFS), $O_2$. For any state $s$, $O.\Add(s)$ then implies $O_1.\Add(s)$ and $O_2.\Add(s)$, $O.\Remove()$ alternates between $O_1.\Remove()$ and $O_2.\Remove()$ on every call, and $O.\Empty()$ is true if both $O_1.\Empty()$ and $O_2.\Empty()$ are true.
 
@@ -150,12 +145,12 @@ Unlike $\epsilon$-GBFS, Type-GBFS as defined by \tcite{xie2014b}[p. 3, new secti
 
 % Thus we arrive at our definition of Type-GBFS: \kw{Type-GBFS using type-based open list $O_1$} is a state space search algorithm using an alternating open list with open lists $O_1,O_2$, where $O_2$ is a best-first open list sorted by some heuristic $h$.
 
-It should be noted that our definition of Type-GBFS is slightly broader than the one given by \tcite{xie2014b}[p. 3, new section]: in their original work, they only tested \emph{uniform random} selection of types and states, strategies which we will henceforth call the \kw{\Utss type selection strategy} and the \kw{\Usss state selection strategy}, while our definition explicitly allows for other strategies, too, which will become relevant in the next section.
+It should be noted that our definition of Type-GBFS is slightly broader than the one given by \tcite{xie2014b}[p. 3, new section]: in their original work, they only tested \emph{uniform random} selection of types and states, strategies which we will from this point on call the \kw{\Utss type selection strategy} and the \kw{\Usss state selection strategy}: our definition explicitly allows for other strategies, too, which will become relevant in the next section.
 
-\section{The HG Type System}
+\section{HG Type System}
 \label{sec:hg}
 
-While \tcite{xie2014b}[p. 6, new section] tested multiple type systems, one particularly effective system they found is the \kw{HG type system}, which considers those states part of the same type which have the same heuristic value $h$ and path cost $g$. Combined with the selection strategies we introduced in the previous section, this gives us our first concrete variant of Type-GBFS: the \kw{\hgUu} algorithm is the Type-GBFS algorithm using a type-based open list following the HG type system, the \Utss type selection strategy, and the \Usss state selection strategy. We will use notation like this to refer to future variants of Type-GBFS as well.
+While \tcite{xie2014b}[p. 6, new section] tested multiple type systems, one particularly effective system they found is the \kw{HG type system}, which considers those states part of the same type which have the same heuristic value and path cost. Combined with the selection strategies we introduced in the previous section, this gives us our first concrete variant of Type-GBFS: the \kw{\hgUu} algorithm is the Type-GBFS algorithm using a type-based open list following the HG type system, the \Utss type selection strategy, and the \Usss state selection strategy. We will use notation like this to refer to future variants of Type-GBFS as well.
 
 Now, while we have said that a heuristic can sometimes be misleading, we still generally assume that following it is preferable to ignoring it completely. Following that logic, we might want a type-based open list that places a bit more weight on states with smaller heuristic values, in such a way that those states are generally more likely to be selected, but that still allows for occasional selections that go entirely against the advice of the heuristic. This was proposed by \tcite{kuroiwa2022}[whole paper], who then introduced \kw{Softmin-Type} as a variant of \hgUu that prefers types with lower minimal heuristic values.
 

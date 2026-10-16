@@ -25,14 +25,18 @@ def sub(m):
 
 PARTS = {
     'front': [
-        # '0-front'
+        '0-front'
     ],
     'center': [
         '1-intro',
-        '2-background',
-        '3-theory',
+        '2-bg',
+        '3-main',
         '4-impl',
-        '5-res'
+        '5-eval',
+        '6-concl'
+    ],
+    'back': [
+        '7-back'
     ]
 }
 
@@ -42,6 +46,6 @@ for key in PARTS:
         source = content / f'{name}.tex'
         text = source.read_text(encoding='utf-8')
         text = re.sub(r'(?:^%[^ ].+$\n?)+', sub, text, flags=re.MULTILINE)
-        text = text.replace('{{TBLPOS}}', 'H')
+        text = text.replace('{{TBLPOS}}', 'ht')
         processed.append(text)
     (build / f'_{key}.tex').write_text('\n'.join(processed), encoding='utf-8')

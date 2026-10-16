@@ -1,0 +1,273 @@
+\chapter{Empirical Evaluation}
+
+In this chapter we outline the experiments we ran to evaluate the HI and LW type systems and we discuss our observations. As benchmarks we used satisficing problems from the \kw{International Planning Competition}[IPC], which we retrieved from the Fast Downward benchmarks repository\footnote{\url{https://github.com/aibasel/downward-benchmarks}}. Specifically, we used the same IPC 2011 and 2014 domains that \tcite{tomasz2024} used in their first experiment, except that our suite totalled 380 problems whereas \tcite{tomasz2024} report their total number of problems at 376. We were unable to determine where this difference comes from: assume therefore that when comparing coverage numbers between both works, our numbers are slightly higher by default.
+
+All experiments were run on an AMD Epyc 7742 CPU, with a 3584MiB memory limit and 10 minute time limit per task. Aside from the CPU, this matches \tcite{tomasz2024}'s experimental setup, which was done to keep the coverage numbers somewhat comparable across both works. For this same reason, we also used the \kw{FF} heuristic \pcite{hoffmann2001}, treated all problems as unit-cost problems, and used the same default $\Softmin$ temperature of $\tau=1$ for algorithms that perform biased type or state selection, unless specified otherwise. Finally, for stochastic algorithms, all results represent averages over five runs.
+
+\section{Comparison to Original Work}
+\label{sec:exprepl}
+
+We first aim to establish that our implementation is correct and that it performs similarly to the implementation used by \tcite{tomasz2024}. To do so, we replicate the first experiment performed by \tcite{tomasz2024}, which compares coverage numbers between GBFS, \hgUu (which they refer to as Type-GBFS), and all variants of the new algorithms.
+
+We point out two additional caveats that apply to this comparison in particular, but will also remain relevant for all other results. First, coverage can be affected by hardware differences and noise: this is particularly relevant here, where we are comparing results obtained on different systems. And second, all stochastic algorithms inherently behave differently depending on the configuration of the random number generator, which we were unable to match between the experiments performed by \tcite{tomasz2024} and ours: in both works, the results are averaged across multiple runs, but some difference will remain.
+
+\Cref{tbl:replsum} shows a comparison between the coverage numbers reported by \tcite{tomasz2024} and those obtained by us. Our implementation agrees with \tcite{tomasz2024}'s findings that the configurations that pair the heuristic improvement type system with depth-biased type selection, that is \hiDh and \hiDu, perform by far the best.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrr}
+\textbf{Algorithm}&\textbf{T\&V 2024}&&\textbf{Ours}&&\textbf{Difference}
+\\\hline
+\gbfs&$198.0$&(13)&$205.0$&(13)&$+3.5$\%
+\\\hgUu&$224.2$&(10)&$221.0$&(10)&$-1.4$\%
+\\\hgHu&$265.8$&(3)&$265.2$&(8)&$-0.2$\%
+\\\hiUu&$206.4$&(11)&$205.6$&(12)&$-0.4$\%
+\\\hiUh&&&$205.2$&&
+\\\hiHu&$255.6$&(8)&$277.6$&(4)&$+8.6$\%
+\\\hiHh&$263.4$&(5)&$282.8$&(3)&$+7.4$\%
+\\\hiDu&$295.0$&(1)&$300.8$&(1)&$+2.0$\%
+\\\hiDh&$284.2$&(2)&$290.6$&(2)&$+2.3$\%
+\\\lwUu&$204.2$&(12)&$211.6$&(11)&$+3.6$\%
+\\\lwUh&&&$202.0$&&
+\\\lwHu&$256.4$&(7)&$267.6$&(7)&$+4.4$\%
+\\\lwHh&$254.4$&(9)&$272.0$&(6)&$+6.9$\%
+\\\lwDu&$258.6$&(6)&$264.6$&(9)&$+2.3$\%
+\\\lwDh&$263.6$&(4)&$272.6$&(5)&$+3.4$\%
+    \end{tabular}
+    \caption{Coverage on a suite of 380 satisficing problems from IPC 2011 and 2014. \textit{T\&V 2024} repeats the results obtained by \tcite{tomasz2024}. Numbers in parentheses rank all entries that were tested in both works from best to worst coverage per implementation, and the rightmost column shows the difference between measurements.}
+    \label{tbl:replsum}
+\end{table}
+
+Interestingly however, the difference between the top two performers and the subsequent entries is far less pronounced in our results as in theirs: while \tcite{tomasz2024} observed their third-best configuration, \hgHu, solving almost 20 fewer problems compared to both works' second-best, \hiDh, our third-best configuration, \hiHh, only covered around eight fewer problems than our second-best.
+
+Notably, we generally observe a more gradual decline in coverage from our best to our ``mediocre'' entries, whereas \tcite{tomasz2024} recorded all their ``mediocre'' performers achieving relatively similar coverages, as is illustrated in \Cref{fig:repltrend}. This is most visible with \hiHu, \hiHh, and \lwHh, which all score higher than expected in our case.
+
+\begin{figure}[{{TBLPOS}}]
+    \centering
+    \input{img/plota.pgf}
+    \caption{Coverage decline on a suite of 380 satisficing problems from IPC 2011 and 2014. \textit{T\&V 2024} refers to results obtained by \tcite{tomasz2024}.}
+    \label{fig:repltrend}
+\end{figure}
+
+Both works then record the coverage numbers declining by about 35 points between their 9th and 10th-best configurations, as is visible in \Cref{fig:repltrend}. The last four configurations, \lwUu, \hiUu, \hgUu, and \gbfs, perform the worst across both implementations: note that these are exactly those configurations that only perform unbiased type and state selection, or no stochastic exploration at all.
+
+Our results suggest that configurations that lie at extreme ends of the performance spectrum show more consistent behavior than ``mediocre'' ones: unbiased type and state selection is unlikely to behave differently with changing configurations of the random number generator, since even if an instance ``gets lucky'' (e.g. explores a state outside a UHR that it is stuck in), it is unable to then ``double down'' on this selection, as it is not biased towards more promising states. As we start introducing biased selection, the situation changes: now, an instance that ``gets lucky'' might end up finding a solution a lot quicker than usual, because biased selection allows the algorithm to leverage ``lucky finds''. Since we were unable to match the random number generation between works, this offers a possible explanation for why we see more inconsistent results with the mediocre performers than with the worst ones. As for why this inconsistency seems to get less noticeable with the best performers, we suspect that these configurations might simply be effective enough for ``luck'' to play less of a role in their performance; however, as with the rest of this paragraph, this is purely speculative.
+
+Next, we want to point to GBFS (\Cref{tbl:replsum}): since this is a deterministic algorithm, and because both works likely used the exact same implementation for it, we assume that the delta in coverage which we record here is mostly attributable to hardware differences. Assuming therefore that our coverage numbers are generally about 5-7 units higher than theirs by default, it is notable that we nevertheless measure equal or even worse coverage for some configurations: namely, \hgHu and \hiUu show around the same coverage across both works, and \hgUu is slightly worse in our case. Both with these outliers, as well as with those configurations that scored higher than expected, it would be interesting to investigate if this primarily occurs in specific domains. Unfortunately, since we do not have access to \tcite{tomasz2024}'s per-domain coverage numbers for all configurations, we cannot do this at this time.
+
+To measure differences in the lengths of the solutions produced by different algorithms, we isolated all those problems that all configurations were able to solve within the time and memory constraints, and summed their individual solution lengths. The resulting values are shown in \Cref{tbl:replpath}: all configurations produce similar solution lengths, with the exception of those that use the heuristic improvement type system paired with depth-biased type selection, which produce much longer solutions. Note that the variants that use the low-water mark type system do not show this same behavior. We offer one possible explanation for this: first, recall that type depth refers to the depth of a type in the type tree, whereas depth as in depth-based diversification refers to the depth of a state in the state space. For these two metrics to be aligned, every transition from one state to another would have to involve the creation of a new type for the new state. As such, the fewer (connected) states a single type spans on average, the more closely type depth maps to state space depth. Now consider that LW tends to group longer sequences of states into the same type than HI: for example, along a path $\langle s_1,s_2,s_3,s_4,s_5\rangle$, and given some heuristic $h$ such that $h(s_1)=h(s_3)=h(s_5)=1$ and $h(s_2)=h(s_4)=2$, HI will identify both $s_2$ and $s_4$ as progress states, leading to the creation of new types with their successors, while LW will consider all these states part of the same type. This suggests that type depth under HI more closely maps to state space depth than with LW: since this facilitates more effective depth-based diversification, and as \tcite{asai2017} have shown that a lack of depth-based diversification can harm performance, this might explain why HI tends to achieve better coverage than LW. It also offers a possible explanation for why HI with depth-biased type selection produces such long solutions: since state space depth is synonymous with path length, depth-biased type selection is inherently biased towards long paths when the type depth aligns with state space depth.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rr}
+\textbf{Algorithm}&\textbf{Sum}
+\\\hline
+\gbfs&$11797$
+\\\hgHu&$12694$
+\\\hgUu&$12288$
+\\\hiDh&$24581$
+\\\hiDu&$26217$
+\\\hiHh&$12548$
+\\\hiHu&$12747$
+\\\hiUh&$11724$
+\\\hiUu&$11857$
+\\\lwDh&$12524$
+\\\lwDu&$12917$
+\\\lwHh&$12258$
+\\\lwHu&$12715$
+\\\lwUh&$11602$
+\\\lwUu&$11729$
+    \end{tabular}
+    \caption{Sums over the lengths of the solutions found by different configurations for the same set of solved problems.}
+    \label{tbl:replpath}
+\end{table}
+
+\section{Softmin Temperature}
+
+Recall that $\Softmin$ has a temperature parameter $\tau>0$. This parameter allows us to control how strongly biased selection strategies prefer lower values: at low $\tau$, the strategy almost always selects the lowest or one of the lowest values, whereas for larger $\tau$, biased selection behaves more and more like uniform selection.
+
+Since we can control $\tau$ independently for type selection as well as state selection, going forward, we will use $\tau_\text{types}$ when discussing the former, and $\tau_\text{states}$ for the latter. In this experiment, we test those algorithms that use biased strategies with different $\Softmin$ temperatures to see if some variants might benefit from more or less aggressive biasing. Due to the large number of runs, we test $\tau_\text{types}$ and $\tau_\text{states}$ separately.
+
+\subsection{Type Selection Temperature}
+
+\Cref{tbl:btsum} shows the coverage numbers under different $\tau_\text{types}$ for all algorithms that use biased type selection. Note that the results for $\tau_\text{types}=1$ were taken from the first experiment. We start with the observation that decreased type selection temperatures seem primarily harmful, since almost all configurations achieve worse coverage at and below $\tau_\text{types}=0.5$ compared to $\tau_\text{types}=1$. The two exceptions to this are \hiDh and \lwDu, which showed a slight improvement at reduced temperatures: however, these gains are too small to definitively rule out that they are not simply the product of noise.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{types}$&$0.25$&$0.5$&$\mathit{1}$&$2$&$5$&$10$
+\\\hline
+\hgUu&&&${\mathit{221.0}}$
+\\\hgHu&$236.4$&$250.6$&$\mathit{265.2}$&$\boldsymbol{275.6}$&$272.4$&$268.2$
+\\\hiUu&&&${\mathit{205.6}}$
+\\\hiHu&$268.2$&$271.8$&$\mathit{277.6}$&$\boldsymbol{278.2}$&$276.8$&$271.2$
+\\\hiHh&$277.2$&$278.4$&$\boldsymbol{\mathit{282.8}}$&$281.8$&$278.6$&$273.2$
+\\\hiDu&$295.8$&$296.4$&$\boldsymbol{\mathit{300.8}}$&$300.0$&$290.2$&$275.0$
+\\\hiDh&$291.8$&$291.6$&$\mathit{290.6}$&$\boldsymbol{293.6}$&$287.6$&$282.6$
+\\\lwUu&&&${\mathit{211.6}}$
+\\\lwHu&$263.8$&$266.2$&$\mathit{267.6}$&$\boldsymbol{268.4}$&$262.6$&$256.6$
+\\\lwHh&$268.8$&$270.2$&$\boldsymbol{\mathit{272.0}}$&$271.0$&$262.8$&$250.0$
+\\\lwDu&$267.6$&$266.4$&$\mathit{264.6}$&$\boldsymbol{270.0}$&$260.6$&$255.0$
+\\\lwDh&$270.2$&$270.2$&$\boldsymbol{\mathit{272.6}}$&$271.4$&$267.0$&$255.4$
+    \end{tabular}
+    \caption{Coverage on a suite of 380 satisficing problems from IPC 2011 and 2014 for different type selection temperatures $\tau_\text{types}$. Values for $\tau_\text{types}=1$ are taken from previous experiments.}
+    \label{tbl:btsum}
+\end{table}
+
+In fact, both these algorithms, as well as \hgHu, \hiHu, and \lwHu, actually performed best at slightly increased temperatures, suggesting that the default biasing temperature is slightly too aggressive for the majority of configurations. One possible explanation for this, which applies to all variants that perform some form of $\MinH$ biasing, is that preferring lower heuristic values too aggressively might prevent an algorithm from escaping from a UHR during an exploratory step, since most of the open states with the smallest heuristic values likely fall within that same UHR.
+
+As temperatures rise even further, almost all algorithms perform considerably worse than at the default temperature: this matches our expectations, since biased selection behaves more and more like uniform selection as temperatures increase, and configurations that use uniform type selection generally perform worse than those that use biased type selection (see \Cref{tbl:replsum}).
+
+Next, observe the delta in coverage between configurations that only differ in their state selection strategy, as shown in \Cref{fig:bttrend}: all variants with uniform state selection except for \hiDu consistently perform worse than their variants with biased state selection as long as the type selection temperature is not too high; in the cases of \hiHh vs. \hiHu and \lwHh vs. \lwHu, we additionally observe the pairs gradually approaching each other in terms of coverage. This could suggest that for some configurations, the effectiveness of the state selection strategy does not depend on the ``quality'' of the type (in the sense that biased type selection considers some types preferable over others) that it selects over. However, we do not find our data conclusive in this regard, particularly because it does not appear to hold in general: in the case of \lwDh vs. \lwDu, we see a sudden increase in the coverage of \lwDu at $\tau_\text{types}=2$ where it almost matches the performance of \lwDh. And in the case of \hiDh vs. \hiDu, we see \hiDh beating \hiDu at $\tau_\text{types}=10$ after having performed worse than it at all lower temperatures. Overall, we deem these trends mostly inconclusive, and will therefore refrain from suggesting possible explanations for our results.
+
+\begin{figure}[{{TBLPOS}}]
+    \centering
+    \input{img/plotb1.pgf}
+    \caption{Coverages on a suite of 380 satisficing problems from IPC 2011 and 2014 for a selection of configurations at different type selection temperatures $\tau_\text{types}$.}
+    \label{fig:bttrend}
+\end{figure}
+
+Lastly, we point to \hgHu in \Cref{tbl:btsum}: this algorithm shows by far the strongest relative improvement in coverage, solving around ten additional problems at $\tau_\text{types}=2$ compared to $\tau_\text{types}=1$. This is particularly relevant since this improvement places \hgHu ahead of all those configurations that use the LW type system. \tcite{tomasz2024} observed this same phenomenom at the default softmin temperature, and our data suggests that it holds at increased temperatures, too.
+
+As for solution lengths, \Cref{tbl:btpath} suggests that the lengths generally decrease as the type selection temperature increases. This is especially pronounced with \hiDu and \hiDh, where the sum of the solution lengths decreases by around 40\% as the temperature rises from $\tau_\text{types}=0.25$ to $\tau_\text{types}=10$; \hiDu and \hiDh are generally our best-performing configurations coverage-wise, but as we showed earlier, they usually produce much longer solutions compared to the other algorithms. This observation suggests that for a certain class of problems, it might be possible to mitigate this by raising the type selection temperature. This could be particularly effective with \hiDh, whose coverage seems to drop less at higher temperatures compared to that of \hiDu (\Cref{tbl:btsum}). One possible explanation for this is that depth-biased type selection at the default temperature might simply be more aggressive than what is required to benefit from its mechanics: \Cref{tbl:btsum} shows \hiDh and \hiDu maintaining relatively good coverage at increased temperatures, suggesting that lowering the temperature primarily leads to longer solution lengths (as per our argument in \Cref{sec:exprepl}) while producing little improvement in terms of coverage.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrr}
+$\tau_\text{types}$&$0.25$&$0.5$&$2$&$5$&$10$
+\\\hline
+\hgHu&$11984$&$12103$&$11768$&$11677$&$11630$
+\\\hiHu&$12206$&$12238$&$11947$&$11617$&$11539$
+\\\hiHh&$12147$&$12054$&$11667$&$11412$&$11276$
+\\\hiDu&$26758$&$28241$&$23965$&$19162$&$15555$
+\\\hiDh&$22534$&$22472$&$20659$&$15998$&$14199$
+\\\lwHu&$12248$&$12191$&$11703$&$11459$&$11302$
+\\\lwHh&$11796$&$11715$&$11278$&$11181$&$11071$
+\\\lwDu&$12409$&$12179$&$11862$&$11483$&$11363$
+\\\lwDh&$12143$&$11850$&$11576$&$11299$&$11125$
+    \end{tabular}
+    \caption{Sums over the lengths of the solutions found by different configurations and at different type selection temperatures $\tau_\text{types}$ for the same set of solved problems.}
+    \label{tbl:btpath}
+\end{table}
+
+\subsection{State Selection Temperature}
+
+We next tested different state selection temperatures $\tau_\text{states}$, the results of which are shown in \Cref{tbl:stsum}. The results for $\tau_\text{states}=1$ were again taken from the first experiment. Similar to what we observed when lowering the type selection temperature, it seems that lowering the state selection temperature is also not beneficial for coverage, with no single coverage number at decreased temperatures matching or surpassing the corresponding coverage at the default temperature.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrrr}
+$\tau_\text{states}$&$0.25$&$0.5$&$\mathit{1}$&$2$&$5$&$10$
+\\\hline
+\hiUu&&&${\mathit{205.6}}$
+\\\hiUh&$202.6$&$203.2$&$\mathit{205.2}$&$208.4$&$\boldsymbol{210.0}$&$207.6$
+\\\hiHu&&&${\mathit{277.6}}$
+\\\hiHh&$264.8$&$281.0$&$\mathit{282.8}$&$283.2$&$\boldsymbol{283.4}$&$281.4$
+\\\hiDu&&&${\mathit{300.8}}$
+\\\hiDh&$270.0$&$285.2$&$\mathit{290.6}$&$\boldsymbol{294.0}$&$288.4$&$283.0$
+\\\lwUu&&&${\mathit{211.6}}$
+\\\lwUh&$201.0$&$198.8$&$\mathit{202.0}$&$199.2$&$208.8$&$\boldsymbol{211.8}$
+\\\lwHu&&&${\mathit{267.6}}$
+\\\lwHh&$247.4$&$259.2$&$\mathit{272.0}$&$\boldsymbol{276.4}$&$273.6$&$265.4$
+\\\lwDu&&&${\mathit{264.6}}$
+\\\lwDh&$250.0$&$258.2$&$\mathit{272.6}$&$273.2$&$\boldsymbol{273.8}$&$267.0$
+    \end{tabular}
+    \caption{Coverage on a suite of 380 satisficing problems from IPC 2011 and 2014 for different state selection temperatures $\tau_\text{states}$. Values for $\tau_\text{states}=1$ are taken from previous experiments.}
+    \label{tbl:stsum}
+\end{table}
+
+We see minor improvements at elevated temperatures in the case of \hiHh and \lwDh, with larger differences for \hiUh, \hiDh, \lwHh, and, in particular, \lwUh. We record \hiUh solving almost five additional problems at $\tau_\text{states}=5$ compared to the default temperature and compared to \hiUu, and a similar improvement was measured for \lwHh at $\tau_\text{states}=2$. Notably, as the temperature rises to $\tau_\text{states}=10$, the results match our expectation that biased state selection performs more and more like uniform state selection at increased temperatures, with every single variant tending towards its unbiased counterpart. Still, our data suggests that the default temperature might generally be slightly lower than optimal. A possible explanation for this is that aggressively selecting the state with the lowest heuristic value can prevent the algorithm from escaping a UHR, given that the type selection strategy previously selected a type within that UHR: as such, increasing the state selection temperature, and thus reducing the chance that the state selection strategy selects precisely the state with minimal heuristic value, could help in escaping UHRs.
+
+Also, recall that we generally observe biased selection strategies performing better than unbiased ones: one interesting exception to this trend, as previously observed at the default $\Softmin$ temperature, is \hiDu outperforming \hiDh, which is particularly interesting since \hiDu is the best overall configuration as found by \tcite{tomasz2024}. Our measurements show \hiDh getting close to the performance of \hiDu when its state selection temperature is raised to $\tau_\text{states}=2$: this shows that it might be possible for \hiDh to exceed the performance of \hiDu if we assume that \hiDu's lead might be isolated to the specific set of benchmarks it was thus far evaluated on.
+
+Our prior observation that solution lengths decrease with increased type selection temperatures does not translate to $\tau_\text{states}$: in fact, \Cref{tbl:stpath} suggests that the opposite is true for the state selection temperature. As for \hiDh, while the improvements are less pronounced here, we still observe noticeably shorter solution lengths at the low end of the temperature spectrum. However, these improvements are less attractive than those we observed with the type selection temperature, since low $\tau_\text{states}$ leads to a considerable drop in \hiDh's coverage (\Cref{tbl:stsum}). A natural explanation for why the gains are smaller here than they were when we changed the type selection temperature is that the state selection strategy has less influence on the depth of the states that are explored, since it can only select within the type that was previously selected by the type selection strategy. As for why the direction in which we observe an improvement is reversed, we attribute this to the fact that biased state selection prefers states with lower heuristic values, which, assuming the heuristic is generally not misleading, will likely lead to a goal state in fewer steps as opposed to states with higher heuristic values.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrr}
+$\tau_\text{states}$&$0.25$&$0.5$&$2$&$5$&$10$
+\\\hline
+\hiUh&$11432$&$11536$&$11610$&$11709$&$11736$
+\\\hiHh&$12080$&$12212$&$12582$&$12601$&$12749$
+\\\hiDh&$20160$&$21632$&$23564$&$24663$&$29352$
+\\\lwUh&$11440$&$11546$&$11587$&$11477$&$11616$
+\\\lwHh&$12062$&$11961$&$12223$&$12271$&$12375$
+\\\lwDh&$12505$&$12452$&$12641$&$12627$&$12720$
+    \end{tabular}
+    \caption{Sums over the lengths of the solutions found by different configurations and at different state selection temperatures $\tau_\text{states}$ for the same set of solved problems.}
+    \label{tbl:stpath}
+\end{table}
+
+\section{Exploration Rate}
+
+So far, all of our experiments, as well as those performed by \tcite{tomasz2024}, used algorithms that introduce type-based exploration by alternating between exploitation and exploration on every expansion. These algorithms therefore spend roughly half of their effort on exploitation and half on exploration. This is not necessarily the optimal balance: in their introduction of $\epsilon$-GBFS, which allows us to tune this balance via the $\epsilon$ parameter, \tcite{valenzano2014} found that it can be beneficial in some cases to allocate less time to exploration and more to exploitation.
+
+In our next experiment, we aim to test our new type systems under different values of $\epsilon$ to see if this applies here as well. For this, we replace the alternating open list that manages exploration and exploitation in our configurations with an open list that only performs an exploratory expansion with some probability $\epsilon$. Note that when $\epsilon=0.5$, this open list approximately performs like the alternating open list if the number of expansions is sufficiently large. The range of values for $\epsilon$ that we test include values below $\epsilon=0.5$, since these were the most effective in \tcite{valenzano2014}'s work, as well as one value above $\epsilon=0.5$ to test if our algorithms could benefit from more exploration.
+
+\Cref{tbl:epssum} shows the coverage numbers we obtained in this experiment, where the \textit{ALT} column repeats the coverages we obtained in our first experiment. Notice that the coverages we obtain when $\epsilon=0.5$ are indeed very close to those we achieved when using the alternating open list, as expected. Our measurements identify three algorithms that may potentially benefit from more exploration, those being \hgHu, \lwHh, and \lwDh. However, the difference in coverage that we record here is small enough that it could also simply be the product of noise, so we do not consider these results conclusive.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrrr}
+$\epsilon$&$0.1$&$0.25$&$0.5$&\emph{ALT}&$0.75$
+\\\hline
+\hgUu&$224.8$&$\boldsymbol{228.4}$&$226.2$&$\mathit{221.0}$&$213.0$
+\\\hgHu&$238.2$&$253.6$&$267.6$&$\mathit{265.2}$&$\boldsymbol{268.8}$
+\\\hiUu&$\boldsymbol{221.6}$&$215.8$&$207.4$&$\mathit{205.6}$&$187.4$
+\\\hiUh&$215.8$&$\boldsymbol{216.2}$&$207.4$&$\mathit{205.2}$&$198.6$
+\\\hiHu&$265.2$&$270.8$&$275.6$&$\boldsymbol{\mathit{277.6}}$&$267.4$
+\\\hiHh&$264.0$&$277.6$&$\boldsymbol{282.8}$&$\boldsymbol{\mathit{282.8}}$&$282.0$
+\\\hiDu&$289.2$&$300.6$&$298.8$&$\boldsymbol{\mathit{300.8}}$&$285.0$
+\\\hiDh&$279.4$&$287.4$&$289.4$&$\boldsymbol{\mathit{290.6}}$&$285.8$
+\\\lwUu&$217.0$&$\boldsymbol{217.8}$&$211.0$&$\mathit{211.6}$&$194.4$
+\\\lwUh&$213.6$&$\boldsymbol{215.6}$&$201.6$&$\mathit{202.0}$&$191.4$
+\\\lwHu&$248.4$&$265.6$&$\boldsymbol{268.0}$&$\mathit{267.6}$&$260.6$
+\\\lwHh&$243.8$&$263.4$&$272.4$&$\mathit{272.0}$&$\boldsymbol{274.2}$
+\\\lwDu&$251.0$&$262.6$&$\boldsymbol{267.2}$&$\mathit{264.6}$&$257.8$
+\\\lwDh&$247.6$&$262.4$&$272.8$&$\mathit{272.6}$&$\boldsymbol{273.4}$
+    \end{tabular}
+    \caption{Coverage on a suite of 380 satisficing problems from IPC 2011 and 2014 for different rates of exploration $\epsilon$.}
+    \label{tbl:epssum}
+\end{table}
+
+When it comes to performing less exploration, we also do not consider the small improvement we record for \hgUu conclusive. We do, however, record considerable improvements at lower $\epsilon$ for all those configurations that use uniform type selection, namely \hiUh, \lwUu, \hiUu, and \lwUh: the former two configurations managed to solve around 6-9 additional problems at $\epsilon=0.25$ compared to $\epsilon=0.5$, while the latter two showed an even greater improvement, with around 14 additional problems solved at $\epsilon=0.25$ for \lwUh\ and at $\epsilon=0.1$ for \hiUu. We will note that all of these improvements were achieved by algorithms that are among the worst performers at $\epsilon=0.5$, and even with these improvements, this assessment does not change. Still, it is interesting to observe configurations like \hiUu achieving such comparatively high coverage numbers: recall that a low $\epsilon$ value effectively causes these algorithms to behave more like regular GBFS. Looking at it from this perspective, we see that adding even a relatively small amount of exploration to GBFS can noticeably improve the coverage of the algorithm.
+
+Perhaps more interesting is the observation that many configurations achieve similar or only slightly worse coverage at lower $\epsilon$: in the case of \hiDu and \hiDh, this supports our earlier observations regarding the solution lengths of these configurations: the solution lengths we measured here, which are shown in \Cref{tbl:epspath}, match our suggestion that \hiDu and \hiDh produce longer solution lengths because they explore too aggressively when using the default parameter values: we see a considerable reduction in solution lengths at lower exploration rates $\epsilon$ for \hiDu and \hiDh. Apart from these configurations, however, solution lengths seem largely unaffected by different $\epsilon$ values, only suggesting a slight downward trend as $\epsilon$ decreases.
+
+\begin{table}[{{TBLPOS}}]
+    \small
+    \centering
+    \begin{tabular}{rrrrr}
+$\epsilon$&$0.1$&$0.25$&$0.5$&$0.75$
+\\\hline
+\hgUu&$8667$&$8687$&$8662$&$8734$
+\\\hgHu&$8603$&$8721$&$9066$&$9497$
+\\\hiUu&$8594$&$8613$&$8494$&$8467$
+\\\hiUh&$8528$&$8589$&$8447$&$8312$
+\\\hiHu&$8654$&$8804$&$9163$&$9593$
+\\\hiHh&$8632$&$8694$&$9108$&$9325$
+\\\hiDu&$9767$&$12161$&$20752$&$46099$
+\\\hiDh&$9254$&$11516$&$18681$&$32573$
+\\\lwUu&$8544$&$8416$&$8284$&$8258$
+\\\lwUh&$8503$&$8402$&$8265$&$8161$
+\\\lwHu&$8647$&$8675$&$9004$&$9322$
+\\\lwHh&$8597$&$8608$&$8805$&$8846$
+\\\lwDu&$8654$&$8758$&$9028$&$9420$
+\\\lwDh&$8569$&$8694$&$8911$&$9334$
+    \end{tabular}
+    \caption{Sums over the lengths of the solutions found by different configurations and at different rates of exploration $\epsilon$ for the same set of solved problems.}
+    \label{tbl:epspath}
+\end{table}
+
+\section{Future Work}
+
+Much work remains to be done until conclusive observations can be made. All of our experiments suffer from relatively small benchmarks suites and noise that we were unable to isolate, and while we average the results for stochastic algorithms over five runs, more repetitions are needed to eliminate the uncertainty that remains. We were also not able to verify any of the explanations we suggested regarding coverage and solution length improvements, and since we only modified parameters in isolation, it remains to be shown if the improvements we observed hold once combined with other modifications.
+
+Some of our experiments suggested that larger improvements might be possible at more extreme parameter values than the ones we tested: while we deem it unlikely that this would produce very different findings, this remains to be investigated. We also did not have time to analyse the effects we observed at a more granular level: \tcite{tomasz2024} observed that \hiDu primarily achieves a higher coverage than some other entries because it manages to cover a handful of domains in full that other configurations are unable to solve. A per-domain analysis across different type systems and parameters might be beneficial to obtain a better understanding of how current and future path-dependent type systems can be improved.

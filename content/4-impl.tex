@@ -7,7 +7,7 @@ For testing the new type systems and comparing their performance to established 
 
 The HI and LW type systems have different architectural requirements when compared to the HG type systems. In particular, the two new type systems are \kw{path-dependent}, in that the type of a given state depends on that state's parent's type. The existing implementation of a type-based open list in Fast Downward was not designed with path-dependent type systems in mind. It also does not allow for biased selection.
 
-While the first issue can be worked around within the constraints of the existing implementation, the second one cannot. Therefore, we opted to forego the existing type-based open list and build a new one from scratch. We also extended Fast Downward's generic open list interface by adding a way for a search algorithm to inform its open list that a new expansion was about to begin. This was done so path-dependent type systems could easily track the parent state for subsequent insertions.
+While the first issue can be worked around within the constraints of the existing implementation, the second one cannot. Therefore, we opted to forego the existing type-based open list and build a new one from scratch. We also extended Fast Downward's generic open list interface by adding a way for a search algorithm to inform its open list that a new expansion is about to begin. This was done so path-dependent type systems could easily track the parent state for subsequent insertions.
 
 \section{Buckets}
 
@@ -27,10 +27,10 @@ Note that changing the bias of an item (which can happen in the \Htss type selec
 
 The type system is notified when a new expansion begins (recall \Cref{sec:impl-ol}) and returns a ``type key'', which uniquely identifies one type, for any state that is inserted into the open list. As with the buckets, we created bespoke implementations for each type system. The most straight-forward implementation is that of the HG type system, which simply returns the same type key for any states with the same heuristic value and path cost.
 
-The HI and LW type systems are slightly more involved. Both type systems first check if the state $s$ they receive has no parent state. If this is the case, it must be that $s=s_I$, and so a new type $T_\text{root}$ is created with $\TypeDepth(T_\text{root})=0$.
+The HI and LW type systems are slightly more involved. Both first check if the state $s$ they receive has no parent state. If this is the case, it must be that $s=s_I$, and so a new type $T_\text{root}$ is created with $\TypeDepth(T_\text{root})=0$.
 
 Otherwise, let $T$ refer to the parent state's type. To find this type, both type systems maintain a \texttt{std::unordered\textunderscore map} that maps each previously encountered state to its type.
 
-If $s$ does have a parent state, the type systems check for progress: if $s$ has made progress compared to its parent state, $s$ is assigned the corresponding new type (a single shared type in the case of HI, and the type that corresponds to the low-water mark value of $s$ in the case of LW). If such a type $T'$ does not exist yet, it is created here, making sure the type depth is increased by one relative to $T$. For both type systems, the keys that point to these new types are cleared when a new expansion begins, to ensure subsequent improving states are not added to the same types as previous improving states.
+If $s$ has a parent state, the type systems check for progress: if $s$ has made progress compared to its parent state, $s$ is assigned the corresponding new type (a single shared type in the case of HI, and the type that corresponds to the low-water mark value of $s$ in the case of LW). If such a type $T'$ does not exist yet, it is created here, making sure the type depth is increased by one relative to $T$. For both type systems, the keys that point to these new types are cleared when a new expansion begins, to ensure subsequent improving states are not added to the same types as previous improving states.
 
 Lastly, if neither of the previous two cases applied, $s$ must be a non-improving type. As such, it is assigned its parent state's type, $T$.

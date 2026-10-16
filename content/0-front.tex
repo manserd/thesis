@@ -1,13 +1,15 @@
 \begin{titlepage}
-    \centering
-    \vspace*{2cm}
+    \noindent\includegraphics[height=1.5cm]{img/logo-en.pdf}\hfill
 
-    {\LARGE \sffamily\bfseries Untitled}
+    \centering
+    \vspace*{4cm}
+
+    {\LARGE \sffamily\bfseries Experiments with BTS-Approximate Type Systems for Type-GBFS}
     
     \vspace*{0.5cm}
     Bachelor's Thesis
     
-    \vspace*{2cm}
+    \vspace*{1.5cm}
     Natural Science Faculty of the University of Basel\\
     \vspace*{0.2cm}
     Department of Mathematics and Computer Science\\
@@ -32,10 +34,10 @@
 
 \chapter*{Acknowledgments}
 
-%TODO
+First and foremost, I want to thank my supervisors Jil Panter and Dr. Florian Pommerening: your patience and insights were incredibly motivating and helpful, and your expertise was inspiring. I also want to thank Prof. Dr. Malte Helmert for giving me the opportunity to write this thesis in the Artificial Intelligence research group. Finally, I thank my friends and family for all the support they have given me throughout the writing of this thesis.
 
-% https://scicore.unibas.ch/using-scicore/acknowledging-scicore/
+Calculations were performed at sciCORE (http://scicore.unibas.ch/) scientific computing center at University of Basel.
 
 \chapter*{Abstract}
 
-%TODO
+The \kw{bench transition system}[BTS] characterizes the behavior of \kw{greedy best-first search}[GBFS] by capturing regions of a state space with similar heuristic progress in so-called \kw{benches}. Benches can fully encapsulate certain kinds of \kw{uninformed heuristic regions}[UHRs], which are regions that can trap GBFS by way of misleading heuristic values. GBFS only escapes UHRs after it has exhaustively explored them; one way to escape UHRs sooner is \kw{stochastic exploration}, which involves occasionally exploring a random state. \kw{Type-GBFS} selects such random states by first selecting a \kw{type}, which is a set of similar states, and then selecting a state from that type. A \kw{type system} defines what it means for two states to be ``similar'': since benches encapsulate certain UHRs in full, using them as types would eliminate the bias towards intra-UHR states that can occur when the open list is dominated by a UHR. As the BTS cannot be computed during search due to its use of the \kw{high-water mark}, we define the BTS-approximate type systems \kw{HI} and \kw{LW}, as introduced by \tcite{tomasz2024}. We empirically evaluate algorithms based on these type systems with different parameter values than those used in the original work. Our results suggest that tuning the parameters can avoid an increase in solution length observed for some algorithms in the original work, without large losses in coverage.
